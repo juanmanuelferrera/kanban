@@ -598,22 +598,29 @@
         .backup-controls {
             margin-top: 15px;
             padding-top: 15px;
-            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            border-top: 1px solid #e5e7eb;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
         }
 
         .backup-btn {
             background: #ffffff;
             border: 1px solid #d1d5db;
-            border-radius: 6px;
-            padding: 8px 12px;
+            border-radius: 12px;
+            padding: 16px 12px;
             color: #374151;
             cursor: pointer;
             font-size: 12px;
-            margin: 2px;
             transition: all 0.3s ease;
-            width: 100%;
-            margin-bottom: 5px;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 60px;
+            text-align: center;
+            font-weight: 500;
         }
 
         .backup-btn:hover {
@@ -805,14 +812,29 @@
         <button class="add-project" onclick="createProject()">+ Add Project</button>
         
         <div class="backup-controls">
-            <button class="backup-btn" onclick="exportData()">📥 Export Data</button>
-            <button class="backup-btn" onclick="document.getElementById('importInput').click()">📤 Import Data</button>
-            <button class="backup-btn" onclick="document.getElementById('tasksImportInput').click()">📝 Import Tasks</button>
-            <button class="backup-btn" onclick="createBackup()">💾 Create Backup</button>
-            <div class="backup-status" id="backupStatus">Auto-saving...</div>
+            <button class="backup-btn" onclick="exportData()">
+                <div style="font-size: 18px; margin-bottom: 4px;">📥</div>
+                Export Data
+            </button>
+            <button class="backup-btn" onclick="document.getElementById('importInput').click()">
+                <div style="font-size: 18px; margin-bottom: 4px;">📤</div>
+                Import Data
+            </button>
+            <button class="backup-btn" onclick="document.getElementById('tasksImportInput').click()">
+                <div style="font-size: 18px; margin-bottom: 4px;">📝</div>
+                Import Tasks
+            </button>
+            <button class="backup-btn" onclick="createBackup()">
+                <div style="font-size: 18px; margin-bottom: 4px;">💾</div>
+                Create Backup
+            </button>
+            <div class="backup-status" id="backupStatus" style="grid-column: 1 / -1; text-align: center; margin-top: 8px; color: #6b7280; font-size: 11px;">Auto-saving...</div>
             <input type="file" id="importInput" class="import-input" accept=".json" onchange="importData(event)">
             <input type="file" id="tasksImportInput" class="import-input" accept=".txt,.md" onchange="importTasksFromFile(event)">
-            <button class="backup-btn" onclick="lockApp()" style="background: #fef2f2; border-color: #fca5a5; color: #dc2626;">🔒 Cerrar Sesión</button>
+            <button class="backup-btn" onclick="lockApp()" style="background: #fef2f2; border-color: #fca5a5; color: #dc2626; grid-column: 1 / -1; margin-top: 8px;">
+                <div style="font-size: 18px; margin-bottom: 4px;">🔒</div>
+                Cerrar Sesión
+            </button>
         </div>
     </div>
 
