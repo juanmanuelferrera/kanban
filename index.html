@@ -51,18 +51,18 @@
         .project-item {
             background: #ffffff;
             border-radius: 8px;
-            padding: 16px;
-            margin-bottom: 8px;
+            padding: 12px;
+            margin-bottom: 6px;
             cursor: pointer;
             transition: all 0.3s ease;
-            color: #000000;
+            color: #111827;
             border: 1px solid #e5e7eb;
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             text-transform: uppercase;
-            font-weight: 800;
-            letter-spacing: 1px;
-            font-size: 14px;
-            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            letter-spacing: 0.8px;
+            font-size: 12px;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
         }
 
         .project-item:hover {
@@ -611,29 +611,30 @@
         }
 
         .backup-controls {
-            margin-top: 15px;
-            padding-top: 15px;
+            margin-top: 10px;
+            padding-top: 10px;
             border-top: 1px solid #e5e7eb;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 8px;
+            gap: 4px;
         }
 
         .backup-btn {
             background: #ffffff;
             border: 1px solid #d1d5db;
-            border-radius: 12px;
-            padding: 16px 12px;
+            border-radius: 6px;
+            padding: 8px 6px;
             color: #374151;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 10px;
             transition: all 0.3s ease;
-            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
             display: flex;
-            flex-direction: column;
+            flex-direction: row;
             align-items: center;
             justify-content: center;
-            min-height: 60px;
+            gap: 4px;
+            min-height: 32px;
             text-align: center;
             font-weight: 500;
         }
@@ -828,27 +829,27 @@
         
         <div class="backup-controls">
             <button class="backup-btn" onclick="exportData()">
-                <div style="font-size: 18px; margin-bottom: 4px;">📥</div>
-                Export Data
+                <span style="font-size: 12px;">📥</span>
+                Export
             </button>
             <button class="backup-btn" onclick="document.getElementById('importInput').click()">
-                <div style="font-size: 18px; margin-bottom: 4px;">📤</div>
-                Import Data
+                <span style="font-size: 12px;">📤</span>
+                Import
             </button>
             <button class="backup-btn" onclick="document.getElementById('tasksImportInput').click()">
-                <div style="font-size: 18px; margin-bottom: 4px;">📝</div>
-                Import Tasks
+                <span style="font-size: 12px;">📝</span>
+                Tasks
             </button>
             <button class="backup-btn" onclick="createBackup()">
-                <div style="font-size: 18px; margin-bottom: 4px;">💾</div>
-                Create Backup
+                <span style="font-size: 12px;">💾</span>
+                Backup
             </button>
-            <div class="backup-status" id="backupStatus" style="grid-column: 1 / -1; text-align: center; margin-top: 8px; color: #6b7280; font-size: 11px;">Auto-saving...</div>
+            <div class="backup-status" id="backupStatus" style="grid-column: 1 / -1; text-align: center; margin-top: 4px; color: #6b7280; font-size: 9px;">Auto-saving...</div>
             <input type="file" id="importInput" class="import-input" accept=".json" onchange="importData(event)">
             <input type="file" id="tasksImportInput" class="import-input" accept=".txt,.md" onchange="importTasksFromFile(event)">
-            <button class="backup-btn" onclick="lockApp()" style="background: #fef2f2; border-color: #fca5a5; color: #dc2626; grid-column: 1 / -1; margin-top: 8px;">
-                <div style="font-size: 18px; margin-bottom: 4px;">🔒</div>
-                Cerrar Sesión
+            <button class="backup-btn" onclick="lockApp()" style="background: #fef2f2; border-color: #fca5a5; color: #dc2626; grid-column: 1 / -1; margin-top: 4px;">
+                <span style="font-size: 12px;">🔒</span>
+                Logout
             </button>
         </div>
     </div>
