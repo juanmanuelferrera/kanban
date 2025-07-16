@@ -122,12 +122,31 @@
         }
 
         .column {
-            background: rgba(255, 255, 255, 0.1);
             backdrop-filter: blur(10px);
             border-radius: 12px;
             padding: 20px;
             min-height: 400px;
             border: 1px solid rgba(255, 255, 255, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .todo-column {
+            background: linear-gradient(to bottom, 
+                rgba(244, 67, 54, 0.15) 0%,
+                rgba(255, 152, 0, 0.1) 100%);
+        }
+
+        .doing-column {
+            background: linear-gradient(to bottom, 
+                rgba(255, 193, 7, 0.15) 0%,
+                rgba(255, 235, 59, 0.1) 100%);
+        }
+
+        .done-column {
+            background: linear-gradient(to bottom, 
+                rgba(76, 175, 80, 0.15) 0%,
+                rgba(139, 195, 74, 0.1) 100%);
         }
 
         .column-header {
@@ -139,6 +158,59 @@
             padding: 10px;
             border-radius: 8px;
             background: rgba(255, 255, 255, 0.1);
+            position: relative;
+        }
+
+        .sorting-controls {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+        }
+
+        .sort-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 4px 8px;
+            color: white;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+        }
+
+        .sort-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .sort-btn.active {
+            background: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .project-sorting {
+            margin-top: 10px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            text-align: center;
+        }
+
+        .project-sorting select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 4px;
+            padding: 4px 8px;
+            color: white;
+            font-size: 12px;
+            outline: none;
+        }
+
+        .project-sorting select option {
+            background: #333;
+            color: white;
         }
 
         .todo-column .column-header {
@@ -179,9 +251,186 @@
             transform: rotate(5deg);
         }
 
-        .column.drag-over {
+        .task-content {
+            flex: 1;
+            background: transparent;
+            border: none;
+            font-size: 14px;
+            line-height: 1.4;
+            outline: none;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+            word-wrap: break-word;
+            min-height: 20px;
+        }
+
+        .task-content:hover {
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .task-content:focus {
+            background: rgba(0, 0, 0, 0.1);
+            cursor: text;
+            border: 1px solid #007bff;
+        }
+
+        .task-item-wrapper {
+            display: flex;
+            align-items: flex-start;
+            gap: 8px;
+            width: 100%;
+        }
+
+        .task-item.reordering {
+            opacity: 0.3;
+            transform: scale(0.95);
+        }
+
+        .task-list.drag-over-reorder {
+            background: rgba(33, 150, 243, 0.1);
+            border: 2px dashed rgba(33, 150, 243, 0.5);
+        }
+
+        .drop-indicator {
+            height: 3px;
+            background: #007bff;
+            margin: 2px 0;
+            border-radius: 2px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .drop-indicator.active {
+            opacity: 1;
+        }
+
+        .task-content.copied {
+            background: rgba(76, 175, 80, 0.2);
+            transform: scale(1.02);
+        }
+
+        .copy-feedback {
+            position: absolute;
+            background: rgba(76, 175, 80, 0.9);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transform: translateY(-10px);
+            transition: all 0.3s ease;
+        }
+
+        .copy-feedback.show {
+            opacity: 1;
+            transform: translateY(-20px);
+        }
+
+        .task-checkbox {
+            width: 16px;
+            height: 16px;
+            margin-right: 8px;
+            cursor: pointer;
+            accent-color: #007bff;
+        }
+
+        .task-item.selected {
+            background: rgba(33, 150, 243, 0.1);
+            border: 2px solid rgba(33, 150, 243, 0.5);
+        }
+
+        .multi-select-controls {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 15px 20px;
+            display: none;
+            gap: 10px;
+            align-items: center;
+            z-index: 1000;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+
+        .multi-select-controls.show {
+            display: flex;
+        }
+
+        .multi-select-btn {
             background: rgba(255, 255, 255, 0.2);
-            border-color: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s ease;
+            margin: 0 2px;
+        }
+
+        .multi-select-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-1px);
+        }
+
+        .multi-select-btn.danger {
+            background: rgba(244, 67, 54, 0.8);
+            border-color: rgba(244, 67, 54, 1);
+        }
+
+        .multi-select-btn.danger:hover {
+            background: rgba(244, 67, 54, 1);
+        }
+
+        .multi-select-info {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 12px;
+            margin-right: 10px;
+        }
+
+        .column-header {
+            position: relative;
+        }
+
+        .select-all-checkbox {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 14px;
+            height: 14px;
+            cursor: pointer;
+            accent-color: white;
+        }
+
+        .column.drag-over {
+            border-color: rgba(255, 255, 255, 0.8);
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        .todo-column.drag-over {
+            background: linear-gradient(to bottom, 
+                rgba(244, 67, 54, 0.25) 0%,
+                rgba(255, 152, 0, 0.2) 100%);
+        }
+
+        .doing-column.drag-over {
+            background: linear-gradient(to bottom, 
+                rgba(255, 193, 7, 0.25) 0%,
+                rgba(255, 235, 59, 0.2) 100%);
+        }
+
+        .done-column.drag-over {
+            background: linear-gradient(to bottom, 
+                rgba(76, 175, 80, 0.25) 0%,
+                rgba(139, 195, 74, 0.2) 100%);
         }
 
         .add-task {
@@ -315,6 +564,153 @@
             gap: 8px;
         }
 
+        .task-count {
+            background: rgba(244, 67, 54, 0.8);
+            color: white;
+            border-radius: 10px;
+            padding: 2px 6px;
+            font-size: 11px;
+            font-weight: bold;
+            min-width: 18px;
+            text-align: center;
+            margin-left: auto;
+        }
+
+        .task-count.zero {
+            background: rgba(76, 175, 80, 0.8);
+        }
+
+        .backup-controls {
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .backup-btn {
+            background: rgba(33, 150, 243, 0.8);
+            border: none;
+            border-radius: 6px;
+            padding: 8px 12px;
+            color: white;
+            cursor: pointer;
+            font-size: 12px;
+            margin: 2px;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-bottom: 5px;
+        }
+
+        .backup-btn:hover {
+            background: rgba(33, 150, 243, 1);
+            transform: translateY(-1px);
+        }
+
+        .backup-status {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 11px;
+            margin-top: 5px;
+            text-align: center;
+        }
+
+        .import-input {
+            display: none;
+        }
+
+        .password-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            z-index: 9999;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .password-container {
+            background: rgba(255, 255, 255, 0.95);
+            padding: 40px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+            max-width: 400px;
+            width: 90%;
+        }
+
+        .password-container h1 {
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 24px;
+        }
+
+        .password-container p {
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .password-input {
+            width: 100%;
+            padding: 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 16px;
+            margin-bottom: 20px;
+            outline: none;
+            transition: border-color 0.3s ease;
+        }
+
+        .password-input:focus {
+            border-color: #667eea;
+        }
+
+        .password-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            padding: 15px 30px;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .password-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .password-error {
+            color: #e74c3c;
+            margin-top: 15px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .password-setup {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .password-setup h3 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 18px;
+        }
+
+        .app-content {
+            display: none;
+        }
+
+        .app-content.unlocked {
+            display: flex;
+        }
+
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
@@ -333,7 +729,32 @@
     </style>
 </head>
 <body>
-    <div class="sidebar">
+    <!-- Password Protection Overlay -->
+    <div class="password-overlay" id="passwordOverlay">
+        <div class="password-container">
+            <h1>🔒 Ultra Kanban</h1>
+            <p>Ingresa la contraseña para acceder a tus proyectos</p>
+            
+            <div id="loginForm">
+                <input type="password" class="password-input" id="passwordInput" placeholder="Contraseña" autocomplete="current-password">
+                <button class="password-btn" onclick="checkPassword()">Ingresar</button>
+                <div class="password-error" id="passwordError">Contraseña incorrecta</div>
+            </div>
+            
+            <div class="password-setup" id="setupForm" style="display: none;">
+                <h3>Configurar Contraseña</h3>
+                <p>Es la primera vez que accedes. Establece una contraseña:</p>
+                <input type="password" class="password-input" id="newPasswordInput" placeholder="Nueva contraseña" autocomplete="new-password">
+                <input type="password" class="password-input" id="confirmPasswordInput" placeholder="Confirmar contraseña" autocomplete="new-password">
+                <button class="password-btn" onclick="setupPassword()">Establecer Contraseña</button>
+                <div class="password-error" id="setupError">Las contraseñas no coinciden</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Application Content -->
+    <div class="app-content" id="appContent">
+        <div class="sidebar">
         <h2>Ultra Kanban</h2>
         <div class="project-list" id="projectList">
             <div class="project-item active" data-project="default">
@@ -341,6 +762,17 @@
             </div>
         </div>
         <button class="add-project" onclick="createProject()">+ Add Project</button>
+        
+        <div class="backup-controls">
+            <button class="backup-btn" onclick="exportData()">📥 Export Data</button>
+            <button class="backup-btn" onclick="document.getElementById('importInput').click()">📤 Import Data</button>
+            <button class="backup-btn" onclick="document.getElementById('tasksImportInput').click()">📝 Import Tasks</button>
+            <button class="backup-btn" onclick="createBackup()">💾 Create Backup</button>
+            <div class="backup-status" id="backupStatus">Auto-saving...</div>
+            <input type="file" id="importInput" class="import-input" accept=".json" onchange="importData(event)">
+            <input type="file" id="tasksImportInput" class="import-input" accept=".txt,.md" onchange="importTasksFromFile(event)">
+            <button class="backup-btn" onclick="lockApp()" style="background: rgba(244, 67, 54, 0.8);">🔒 Cerrar Sesión</button>
+        </div>
     </div>
 
     <div class="main-content">
@@ -393,17 +825,29 @@
             </div>
         </div>
     </div>
+    </div> <!-- Close app-content -->
 
     <script>
         let currentProject = 'default';
         let currentColumn = '';
         let draggedTask = null;
         
+        // Data version for migration support
+        const DATA_VERSION = '1.1.0';
+        const BACKUP_PREFIX = 'kanban_backup_';
+        const MAX_BACKUPS = 10;
+        
         let projects = {
             'default': {
                 name: 'Default Project',
                 title: 'My Kanban Board',
+                sortingMode: 'free', // free, alphabetical, newest-first, oldest-first
                 tasks: {
+                    todo: [],
+                    doing: [],
+                    done: []
+                },
+                taskMetadata: {
                     todo: [],
                     doing: [],
                     done: []
@@ -411,27 +855,538 @@
             }
         };
 
-        // Load data from localStorage on page load
-        function loadData() {
-            const savedProjects = localStorage.getItem('kanbanProjects');
-            const savedCurrentProject = localStorage.getItem('currentProject');
-            
-            if (savedProjects) {
-                projects = JSON.parse(savedProjects);
+        // Enhanced Storage Manager
+        class StorageManager {
+            constructor() {
+                this.storageKey = 'kanbanProjects';
+                this.currentProjectKey = 'currentProject';
+                this.versionKey = 'kanbanVersion';
+                this.lastBackupKey = 'lastBackup';
+                this.initIndexedDB();
             }
+
+            // Initialize IndexedDB for robust storage
+            async initIndexedDB() {
+                try {
+                    this.db = await new Promise((resolve, reject) => {
+                        const request = indexedDB.open('UltraKanbanDB', 1);
+                        request.onerror = () => reject(request.error);
+                        request.onsuccess = () => resolve(request.result);
+                        request.onupgradeneeded = (event) => {
+                            const db = event.target.result;
+                            if (!db.objectStoreNames.contains('projects')) {
+                                db.createObjectStore('projects', { keyPath: 'id' });
+                            }
+                            if (!db.objectStoreNames.contains('backups')) {
+                                const backupStore = db.createObjectStore('backups', { keyPath: 'id' });
+                                backupStore.createIndex('timestamp', 'timestamp', { unique: false });
+                            }
+                        };
+                    });
+                } catch (error) {
+                    console.warn('IndexedDB not available, using localStorage only:', error);
+                }
+            }
+
+            // Validate data integrity
+            validateData(data) {
+                if (!data || typeof data !== 'object') return false;
+                if (!data.version || !data.projects || !data.currentProject) return false;
+                
+                for (const [projectId, project] of Object.entries(data.projects)) {
+                    if (!project.name || !project.title || !project.tasks) return false;
+                    if (!project.tasks.todo || !project.tasks.doing || !project.tasks.done) return false;
+                    if (!Array.isArray(project.tasks.todo) || !Array.isArray(project.tasks.doing) || !Array.isArray(project.tasks.done)) return false;
+                }
+                return true;
+            }
+
+            // Create timestamped data package
+            createDataPackage() {
+                return {
+                    version: DATA_VERSION,
+                    timestamp: new Date().toISOString(),
+                    projects: structuredClone(projects),
+                    currentProject: currentProject,
+                    metadata: {
+                        totalProjects: Object.keys(projects).length,
+                        totalTasks: Object.values(projects).reduce((sum, p) => 
+                            sum + p.tasks.todo.length + p.tasks.doing.length + p.tasks.done.length, 0)
+                    }
+                };
+            }
+
+            // Save to multiple storage backends
+            async save() {
+                const data = this.createDataPackage();
+                const success = { localStorage: false, indexedDB: false };
+
+                // Save to localStorage
+                try {
+                    localStorage.setItem(this.storageKey, JSON.stringify(data.projects));
+                    localStorage.setItem(this.currentProjectKey, data.currentProject);
+                    localStorage.setItem(this.versionKey, data.version);
+                    localStorage.setItem(this.lastBackupKey, data.timestamp);
+                    success.localStorage = true;
+                } catch (error) {
+                    console.error('localStorage save failed:', error);
+                }
+
+                // Save to IndexedDB
+                if (this.db) {
+                    try {
+                        const transaction = this.db.transaction(['projects'], 'readwrite');
+                        const store = transaction.objectStore('projects');
+                        await store.put({ id: 'main', data: data });
+                        success.indexedDB = true;
+                    } catch (error) {
+                        console.error('IndexedDB save failed:', error);
+                    }
+                }
+
+                this.updateBackupStatus(success);
+                return success;
+            }
+
+            // Load from storage with fallback
+            async load() {
+                let data = null;
+                
+                // Try IndexedDB first
+                if (this.db) {
+                    try {
+                        const transaction = this.db.transaction(['projects'], 'readonly');
+                        const store = transaction.objectStore('projects');
+                        const result = await store.get('main');
+                        if (result && result.data && this.validateData(result.data)) {
+                            data = result.data;
+                        }
+                    } catch (error) {
+                        console.warn('IndexedDB load failed:', error);
+                    }
+                }
+
+                // Fallback to localStorage
+                if (!data) {
+                    try {
+                        const savedProjects = localStorage.getItem(this.storageKey);
+                        const savedCurrentProject = localStorage.getItem(this.currentProjectKey);
+                        const savedVersion = localStorage.getItem(this.versionKey);
+                        
+                        if (savedProjects) {
+                            data = {
+                                version: savedVersion || '1.0.0',
+                                projects: JSON.parse(savedProjects),
+                                currentProject: savedCurrentProject || 'default',
+                                timestamp: localStorage.getItem(this.lastBackupKey) || new Date().toISOString()
+                            };
+                            
+                            if (!this.validateData(data)) {
+                                throw new Error('Data validation failed');
+                            }
+                        }
+                    } catch (error) {
+                        console.error('localStorage load failed:', error);
+                        data = null;
+                    }
+                }
+
+                return data;
+            }
+
+            // Create backup in IndexedDB
+            async createBackup() {
+                if (!this.db) return false;
+                
+                try {
+                    const data = this.createDataPackage();
+                    const transaction = this.db.transaction(['backups'], 'readwrite');
+                    const store = transaction.objectStore('backups');
+                    
+                    const backupId = `backup_${Date.now()}`;
+                    await store.put({
+                        id: backupId,
+                        timestamp: data.timestamp,
+                        data: data
+                    });
+
+                    // Clean old backups
+                    await this.cleanOldBackups();
+                    return true;
+                } catch (error) {
+                    console.error('Backup creation failed:', error);
+                    return false;
+                }
+            }
+
+            // Clean old backups (keep only MAX_BACKUPS)
+            async cleanOldBackups() {
+                if (!this.db) return;
+                
+                try {
+                    const transaction = this.db.transaction(['backups'], 'readwrite');
+                    const store = transaction.objectStore('backups');
+                    const index = store.index('timestamp');
+                    
+                    const allBackups = await index.getAll();
+                    if (allBackups.length > MAX_BACKUPS) {
+                        const toDelete = allBackups
+                            .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
+                            .slice(0, allBackups.length - MAX_BACKUPS);
+                        
+                        for (const backup of toDelete) {
+                            await store.delete(backup.id);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Backup cleanup failed:', error);
+                }
+            }
+
+            // Export data as JSON file
+            exportData() {
+                const data = this.createDataPackage();
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ultra-kanban-backup-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.updateBackupStatus({ export: true });
+            }
+
+            // Import data from JSON file
+            async importData(file) {
+                try {
+                    const text = await file.text();
+                    const importedData = JSON.parse(text);
+                    
+                    if (!this.validateData(importedData)) {
+                        throw new Error('Invalid data format');
+                    }
+
+                    // Create backup before import
+                    await this.createBackup();
+                    
+                    // Apply imported data
+                    projects = importedData.projects;
+                    currentProject = importedData.currentProject || 'default';
+                    
+                    // Save and render
+                    await this.save();
+                    renderProjects();
+                    switchProject(currentProject);
+                    
+                    this.updateBackupStatus({ import: true });
+                    return true;
+                } catch (error) {
+                    console.error('Import failed:', error);
+                    alert('Import failed: ' + error.message);
+                    return false;
+                }
+            }
+
+            // Update backup status display
+            updateBackupStatus(success) {
+                const statusEl = document.getElementById('backupStatus');
+                const now = new Date().toLocaleTimeString();
+                
+                if (success.export) {
+                    statusEl.textContent = `Exported at ${now}`;
+                    statusEl.style.color = 'rgba(76, 175, 80, 0.8)';
+                } else if (success.import) {
+                    statusEl.textContent = `Imported at ${now}`;
+                    statusEl.style.color = 'rgba(76, 175, 80, 0.8)';
+                } else if (success.localStorage && success.indexedDB) {
+                    statusEl.textContent = `All saved at ${now}`;
+                    statusEl.style.color = 'rgba(76, 175, 80, 0.8)';
+                } else if (success.localStorage || success.indexedDB) {
+                    statusEl.textContent = `Partial save at ${now}`;
+                    statusEl.style.color = 'rgba(255, 193, 7, 0.8)';
+                } else {
+                    statusEl.textContent = `Save failed at ${now}`;
+                    statusEl.style.color = 'rgba(244, 67, 54, 0.8)';
+                }
+                
+                setTimeout(() => {
+                    statusEl.textContent = 'Auto-saving...';
+                    statusEl.style.color = 'rgba(255, 255, 255, 0.7)';
+                }, 3000);
+            }
+        }
+
+        // Initialize storage manager
+        const storage = new StorageManager();
+
+        // Password Protection System
+        class PasswordManager {
+            constructor() {
+                this.passwordKey = 'ultraKanbanPassword';
+                this.sessionKey = 'ultraKanbanSession';
+                this.sessionDuration = 24 * 60 * 60 * 1000; // 24 hours
+            }
+
+            async hashPassword(password) {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(password + 'ultrakanban_salt');
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+
+            async setPassword(password) {
+                const hashedPassword = await this.hashPassword(password);
+                localStorage.setItem(this.passwordKey, hashedPassword);
+            }
+
+            async checkPassword(password) {
+                const storedHash = localStorage.getItem(this.passwordKey);
+                if (!storedHash) return false;
+                const hashedPassword = await this.hashPassword(password);
+                return hashedPassword === storedHash;
+            }
+
+            isPasswordSet() {
+                return localStorage.getItem(this.passwordKey) !== null;
+            }
+
+            createSession() {
+                const sessionData = {
+                    timestamp: Date.now(),
+                    expires: Date.now() + this.sessionDuration
+                };
+                sessionStorage.setItem(this.sessionKey, JSON.stringify(sessionData));
+            }
+
+            isSessionValid() {
+                const sessionData = sessionStorage.getItem(this.sessionKey);
+                if (!sessionData) return false;
+                
+                try {
+                    const session = JSON.parse(sessionData);
+                    return Date.now() < session.expires;
+                } catch {
+                    return false;
+                }
+            }
+
+            clearSession() {
+                sessionStorage.removeItem(this.sessionKey);
+            }
+        }
+
+        const passwordManager = new PasswordManager();
+
+        // Password UI Functions
+        async function checkPassword() {
+            const password = document.getElementById('passwordInput').value;
+            const errorDiv = document.getElementById('passwordError');
             
-            if (savedCurrentProject) {
-                currentProject = savedCurrentProject;
+            if (!password) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'Ingresa una contraseña';
+                return;
+            }
+
+            const isValid = await passwordManager.checkPassword(password);
+            if (isValid) {
+                passwordManager.createSession();
+                unlockApp();
+            } else {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'Contraseña incorrecta';
+                document.getElementById('passwordInput').value = '';
+                document.getElementById('passwordInput').focus();
+            }
+        }
+
+        async function setupPassword() {
+            const newPassword = document.getElementById('newPasswordInput').value;
+            const confirmPassword = document.getElementById('confirmPasswordInput').value;
+            const errorDiv = document.getElementById('setupError');
+            
+            if (!newPassword || newPassword.length < 4) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'La contraseña debe tener al menos 4 caracteres';
+                return;
+            }
+
+            if (newPassword !== confirmPassword) {
+                errorDiv.style.display = 'block';
+                errorDiv.textContent = 'Las contraseñas no coinciden';
+                return;
+            }
+
+            await passwordManager.setPassword(newPassword);
+            passwordManager.createSession();
+            unlockApp();
+        }
+
+        function unlockApp() {
+            document.getElementById('passwordOverlay').style.display = 'none';
+            document.getElementById('appContent').classList.add('unlocked');
+            loadData(); // Load the application data
+        }
+
+        function lockApp() {
+            passwordManager.clearSession();
+            document.getElementById('passwordOverlay').style.display = 'flex';
+            document.getElementById('appContent').classList.remove('unlocked');
+            document.getElementById('passwordInput').value = '';
+            document.getElementById('passwordError').style.display = 'none';
+        }
+
+        // Initialize password protection
+        function initializePasswordProtection() {
+            if (passwordManager.isSessionValid()) {
+                unlockApp();
+            } else if (passwordManager.isPasswordSet()) {
+                // Show login form
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('setupForm').style.display = 'none';
+                document.getElementById('passwordInput').focus();
+            } else {
+                // Show setup form for first-time users
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('setupForm').style.display = 'block';
+                document.getElementById('newPasswordInput').focus();
+            }
+        }
+
+        // Handle Enter key in password inputs
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                if (document.getElementById('passwordInput') === document.activeElement) {
+                    checkPassword();
+                } else if (document.getElementById('confirmPasswordInput') === document.activeElement || 
+                          document.getElementById('newPasswordInput') === document.activeElement) {
+                    setupPassword();
+                }
+            }
+        });
+
+        // Load data with enhanced persistence
+        async function loadData() {
+            try {
+                const data = await storage.load();
+                if (data) {
+                    projects = data.projects;
+                    currentProject = data.currentProject;
+                }
+            } catch (error) {
+                console.error('Failed to load data:', error);
             }
             
             renderProjects();
             switchProject(currentProject);
         }
 
-        // Save data to localStorage
-        function saveData() {
-            localStorage.setItem('kanbanProjects', JSON.stringify(projects));
-            localStorage.setItem('currentProject', currentProject);
+        // Save data with enhanced persistence
+        async function saveData() {
+            try {
+                await storage.save();
+            } catch (error) {
+                console.error('Failed to save data:', error);
+            }
+        }
+
+        // Auto-save every 30 seconds
+        setInterval(saveData, 30000);
+
+        // Save before page unload
+        window.addEventListener('beforeunload', saveData);
+
+        // Periodic backup (every 5 minutes)
+        setInterval(async () => {
+            try {
+                await storage.createBackup();
+            } catch (error) {
+                console.error('Auto-backup failed:', error);
+            }
+        }, 5 * 60 * 1000);
+
+        // Global functions for UI
+        function exportData() {
+            storage.exportData();
+        }
+
+        function createBackup() {
+            storage.createBackup().then(success => {
+                if (success) {
+                    storage.updateBackupStatus({ export: false, import: false });
+                } else {
+                    alert('Backup creation failed. Check console for details.');
+                }
+            });
+        }
+
+        function importData(event) {
+            const file = event.target.files[0];
+            if (file) {
+                storage.importData(file);
+                event.target.value = ''; // Reset input
+            }
+        }
+
+        // Import tasks from text file
+        async function importTasksFromFile(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            try {
+                const text = await file.text();
+                const lines = text.split(/\r?\n/)
+                    .map(line => line.trim())
+                    .filter(line => line.length > 0); // Remove empty lines
+
+                if (lines.length === 0) {
+                    alert('No valid tasks found in the file.');
+                    return;
+                }
+
+                // Add tasks to the current project's TODO column
+                const addedTasks = [];
+                lines.forEach(line => {
+                    if (line.length > 0) {
+                        projects[currentProject].tasks.todo.push(line);
+                        addedTasks.push(line);
+                    }
+                });
+
+                // Save and refresh the UI
+                await saveData();
+                renderTasks();
+
+                // Show success feedback
+                showTaskImportFeedback(addedTasks.length, file.name);
+
+                // Reset input
+                event.target.value = '';
+
+            } catch (error) {
+                console.error('Task import failed:', error);
+                alert('Failed to import tasks: ' + error.message);
+                event.target.value = '';
+            }
+        }
+
+        // Show feedback for task import
+        function showTaskImportFeedback(count, filename) {
+            const statusEl = document.getElementById('backupStatus');
+            const originalText = statusEl.textContent;
+            const originalColor = statusEl.style.color;
+
+            statusEl.textContent = `Imported ${count} tasks from ${filename}`;
+            statusEl.style.color = 'rgba(76, 175, 80, 0.8)';
+
+            setTimeout(() => {
+                statusEl.textContent = originalText;
+                statusEl.style.color = originalColor;
+            }, 4000);
         }
 
         // Render projects in sidebar
@@ -474,6 +1429,14 @@
                 });
                 
                 contentDiv.appendChild(nameInput);
+                
+                // Add task count badge
+                const taskCount = projects[projectId].tasks.todo.length;
+                const countBadge = document.createElement('span');
+                countBadge.className = `task-count ${taskCount === 0 ? 'zero' : ''}`;
+                countBadge.textContent = taskCount;
+                countBadge.title = `${taskCount} tareas pendientes`;
+                contentDiv.appendChild(countBadge);
                 
                 // Add delete button for non-default projects
                 if (projectId !== 'default') {
@@ -525,21 +1488,96 @@
                 taskList.innerHTML = '';
                 
                 projects[currentProject].tasks[column].forEach((task, index) => {
+                    // Create drop indicator
+                    const dropIndicator = document.createElement('div');
+                    dropIndicator.className = 'drop-indicator';
+                    dropIndicator.setAttribute('data-drop-index', index);
+                    dropIndicator.setAttribute('data-column', column);
+                    taskList.appendChild(dropIndicator);
+                    
+                    // Create task item
                     const taskDiv = document.createElement('div');
                     taskDiv.className = 'task-item';
                     taskDiv.draggable = true;
                     taskDiv.setAttribute('data-task-id', index);
                     taskDiv.setAttribute('data-column', column);
-                    taskDiv.innerHTML = `
-                        <button class="delete-task" onclick="deleteTask('${column}', ${index})">×</button>
-                        ${task}
-                    `;
                     
-                    taskDiv.addEventListener('dragstart', handleDragStart);
-                    taskDiv.addEventListener('dragend', handleDragEnd);
+                    // Create task wrapper
+                    const wrapperDiv = document.createElement('div');
+                    wrapperDiv.className = 'task-item-wrapper';
+                    
+                    // Create editable task content
+                    const taskContent = document.createElement('div');
+                    taskContent.className = 'task-content';
+                    taskContent.contentEditable = false;
+                    taskContent.textContent = task;
+                    taskContent.setAttribute('data-task-id', index);
+                    taskContent.setAttribute('data-column', column);
+                    
+                    // Add single-click to edit and double-click to copy
+                    let clickTimer = null;
+                    taskContent.addEventListener('click', (e) => {
+                        // Prevent editing when dragging
+                        if (e.target.closest('.task-item').classList.contains('dragging')) return;
+                        
+                        if (clickTimer) {
+                            // This is a double-click
+                            clearTimeout(clickTimer);
+                            clickTimer = null;
+                            copyTaskText(taskContent);
+                        } else {
+                            // This might be a single-click, wait to see if double-click follows
+                            clickTimer = setTimeout(() => {
+                                clickTimer = null;
+                                if (taskContent.contentEditable !== 'true') {
+                                    startEditingTask(taskContent, column, index);
+                                }
+                            }, 250);
+                        }
+                    });
+                    
+                    // Handle enter/escape keys
+                    taskContent.addEventListener('keydown', (e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            finishEditingTask(taskContent, column, index);
+                        } else if (e.key === 'Escape') {
+                            cancelEditingTask(taskContent, column, index);
+                        }
+                    });
+                    
+                    // Handle blur (clicking outside)
+                    taskContent.addEventListener('blur', () => {
+                        if (taskContent.contentEditable === 'true') {
+                            finishEditingTask(taskContent, column, index);
+                        }
+                    });
+                    
+                    // Create delete button
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-task';
+                    deleteBtn.textContent = '×';
+                    deleteBtn.onclick = () => deleteTask(column, index);
+                    
+                    wrapperDiv.appendChild(taskContent);
+                    wrapperDiv.appendChild(deleteBtn);
+                    taskDiv.appendChild(wrapperDiv);
+                    
+                    // Add drag event listeners
+                    taskDiv.addEventListener('dragstart', handleTaskDragStart);
+                    taskDiv.addEventListener('dragend', handleTaskDragEnd);
+                    taskDiv.addEventListener('dragover', handleTaskDragOver);
+                    taskDiv.addEventListener('drop', handleTaskDrop);
                     
                     taskList.appendChild(taskDiv);
                 });
+                
+                // Add final drop indicator
+                const finalDropIndicator = document.createElement('div');
+                finalDropIndicator.className = 'drop-indicator';
+                finalDropIndicator.setAttribute('data-drop-index', projects[currentProject].tasks[column].length);
+                finalDropIndicator.setAttribute('data-column', column);
+                taskList.appendChild(finalDropIndicator);
             });
         }
 
@@ -597,6 +1635,7 @@
             if (taskText) {
                 projects[currentProject].tasks[currentColumn].push(taskText);
                 renderTasks();
+                renderProjects(); // Update task counts
                 closeModal();
                 saveData();
             }
@@ -613,15 +1652,229 @@
             document.getElementById('taskInput').value = '';
         }
 
-        // Drag and drop functionality
-        function handleDragStart(e) {
+        // Task editing functions
+        function startEditingTask(element, column, index) {
+            element.contentEditable = true;
+            element.focus();
+            
+            // Select all text
+            const range = document.createRange();
+            range.selectNodeContents(element);
+            const selection = window.getSelection();
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            element.setAttribute('data-original-value', element.textContent);
+        }
+        
+        function finishEditingTask(element, column, index) {
+            const newText = element.textContent.trim();
+            if (newText && newText !== '') {
+                projects[currentProject].tasks[column][index] = newText;
+                saveData();
+            } else {
+                // Revert to original value if empty
+                element.textContent = element.getAttribute('data-original-value');
+            }
+            element.contentEditable = false;
+            element.removeAttribute('data-original-value');
+        }
+        
+        function cancelEditingTask(element, column, index) {
+            element.textContent = element.getAttribute('data-original-value');
+            element.contentEditable = false;
+            element.removeAttribute('data-original-value');
+        }
+
+        // Copy task text to clipboard
+        async function copyTaskText(element) {
+            const text = element.textContent.trim();
+            
+            try {
+                await navigator.clipboard.writeText(text);
+                showCopyFeedback(element, 'Copied!');
+            } catch (error) {
+                // Fallback for older browsers
+                const textArea = document.createElement('textarea');
+                textArea.value = text;
+                document.body.appendChild(textArea);
+                textArea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textArea);
+                showCopyFeedback(element, 'Copied!');
+            }
+        }
+
+        // Show copy feedback
+        function showCopyFeedback(element, message) {
+            // Add visual feedback to the task
+            element.classList.add('copied');
+            setTimeout(() => {
+                element.classList.remove('copied');
+            }, 300);
+
+            // Create and show feedback tooltip
+            const feedback = document.createElement('div');
+            feedback.className = 'copy-feedback';
+            feedback.textContent = message;
+            
+            const rect = element.getBoundingClientRect();
+            feedback.style.left = rect.left + rect.width / 2 - 25 + 'px';
+            feedback.style.top = rect.top - 10 + 'px';
+            
+            document.body.appendChild(feedback);
+            
+            // Animate in
+            setTimeout(() => feedback.classList.add('show'), 10);
+            
+            // Remove after animation
+            setTimeout(() => {
+                feedback.classList.remove('show');
+                setTimeout(() => {
+                    if (feedback.parentNode) {
+                        document.body.removeChild(feedback);
+                    }
+                }, 300);
+            }, 1500);
+        }
+
+        // Enhanced drag and drop functionality
+        let draggedTask = null;
+        let draggedTaskData = null;
+        let isReordering = false;
+
+        function handleTaskDragStart(e) {
             draggedTask = e.target;
+            const taskId = parseInt(e.target.getAttribute('data-task-id'));
+            const column = e.target.getAttribute('data-column');
+            
+            draggedTaskData = {
+                taskId: taskId,
+                column: column,
+                content: projects[currentProject].tasks[column][taskId]
+            };
+            
             e.target.classList.add('dragging');
+            
+            // Determine if this is reordering within the same column or moving between columns
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleTaskDragEnd(e) {
+            e.target.classList.remove('dragging', 'reordering');
+            
+            // Clear all drop indicators
+            document.querySelectorAll('.drop-indicator').forEach(indicator => {
+                indicator.classList.remove('active');
+            });
+            
+            document.querySelectorAll('.task-list').forEach(list => {
+                list.classList.remove('drag-over-reorder');
+            });
+            
+            draggedTask = null;
+            draggedTaskData = null;
+            isReordering = false;
+        }
+
+        function handleTaskDragOver(e) {
+            e.preventDefault();
+            
+            if (!draggedTask || !draggedTaskData) return;
+            
+            const rect = e.target.getBoundingClientRect();
+            const midpoint = rect.top + rect.height / 2;
+            const isAbove = e.clientY < midpoint;
+            
+            // Find the closest drop indicator
+            const taskElement = e.target.closest('.task-item');
+            if (taskElement) {
+                const taskList = taskElement.parentElement;
+                const indicators = taskList.querySelectorAll('.drop-indicator');
+                
+                // Clear all indicators first
+                indicators.forEach(indicator => indicator.classList.remove('active'));
+                
+                const taskId = parseInt(taskElement.getAttribute('data-task-id'));
+                const column = taskElement.getAttribute('data-column');
+                
+                // Activate appropriate indicator
+                if (isAbove) {
+                    const indicator = taskList.querySelector(`[data-drop-index="${taskId}"]`);
+                    if (indicator) indicator.classList.add('active');
+                } else {
+                    const indicator = taskList.querySelector(`[data-drop-index="${taskId + 1}"]`);
+                    if (indicator) indicator.classList.add('active');
+                }
+                
+                // Add visual feedback for reordering vs moving
+                if (column === draggedTaskData.column) {
+                    taskList.classList.add('drag-over-reorder');
+                    draggedTask.classList.add('reordering');
+                    isReordering = true;
+                } else {
+                    taskList.classList.remove('drag-over-reorder');
+                    draggedTask.classList.remove('reordering');
+                    isReordering = false;
+                }
+            }
+        }
+
+        function handleTaskDrop(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            
+            if (!draggedTask || !draggedTaskData) return;
+            
+            const targetElement = e.target.closest('.task-item');
+            if (!targetElement) return;
+            
+            const targetTaskId = parseInt(targetElement.getAttribute('data-task-id'));
+            const targetColumn = targetElement.getAttribute('data-column');
+            
+            const rect = targetElement.getBoundingClientRect();
+            const midpoint = rect.top + rect.height / 2;
+            const isAbove = e.clientY < midpoint;
+            
+            // Calculate drop position
+            let dropIndex = isAbove ? targetTaskId : targetTaskId + 1;
+            
+            // Handle the drop
+            const sourceColumn = draggedTaskData.column;
+            const sourceIndex = draggedTaskData.taskId;
+            
+            if (sourceColumn === targetColumn) {
+                // Reordering within the same column
+                if (sourceIndex !== dropIndex && sourceIndex !== dropIndex - 1) {
+                    const task = projects[currentProject].tasks[sourceColumn].splice(sourceIndex, 1)[0];
+                    
+                    // Adjust drop index if we removed an item before it
+                    if (sourceIndex < dropIndex) {
+                        dropIndex--;
+                    }
+                    
+                    projects[currentProject].tasks[targetColumn].splice(dropIndex, 0, task);
+                    renderTasks();
+                    saveData();
+                }
+            } else {
+                // Moving between columns
+                const task = projects[currentProject].tasks[sourceColumn].splice(sourceIndex, 1)[0];
+                projects[currentProject].tasks[targetColumn].splice(dropIndex, 0, task);
+                renderTasks();
+                saveData();
+            }
+        }
+
+        // Legacy drag and drop for column-level drops (fallback)
+        function handleDragStart(e) {
+            if (!e.target.classList.contains('task-item')) return;
+            handleTaskDragStart(e);
         }
 
         function handleDragEnd(e) {
-            e.target.classList.remove('dragging');
-            draggedTask = null;
+            if (!e.target.classList.contains('task-item')) return;
+            handleTaskDragEnd(e);
         }
 
         // Add drag and drop event listeners to columns
@@ -672,8 +1925,15 @@
             saveData();
         });
 
-        // Modal keyboard shortcuts
+        // Keyboard shortcuts
         document.addEventListener('keydown', function(e) {
+            // Ctrl+N to create new task in TODO column
+            if (e.ctrlKey && e.key === 'n') {
+                e.preventDefault();
+                showAddTaskModal('todo');
+                return;
+            }
+            
             if (e.key === 'Escape') {
                 closeModal();
                 closeProjectModal();
@@ -712,8 +1972,37 @@
             input.removeAttribute('data-original-value');
         }
 
-        // Initialize the application
-        loadData();
+        // Auto-refresh functionality
+        function refreshData() {
+            loadData().then(() => {
+                console.log('Data refreshed automatically');
+            }).catch(error => {
+                console.error('Auto-refresh failed:', error);
+            });
+        }
+
+        // Refresh data when page becomes visible (tab switching)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                refreshData();
+            }
+        });
+
+        // Refresh data when window gains focus
+        window.addEventListener('focus', function() {
+            refreshData();
+        });
+
+        // Periodic refresh every 2 minutes (in case of multi-device usage)
+        setInterval(refreshData, 2 * 60 * 1000);
+
+        // Force refresh on page load to ensure latest data
+        window.addEventListener('load', function() {
+            setTimeout(refreshData, 500); // Small delay to ensure everything is loaded
+        });
+
+        // Initialize the application with password protection
+        initializePasswordProtection();
     </script>
 </body>
 </html>
