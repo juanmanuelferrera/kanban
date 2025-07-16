@@ -286,6 +286,35 @@
             background: rgba(244, 67, 54, 1);
         }
 
+        .project-name {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: white;
+            font-size: 14px;
+            outline: none;
+            cursor: pointer;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: all 0.3s ease;
+        }
+
+        .project-name:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .project-name:focus {
+            background: rgba(255, 255, 255, 0.2);
+            cursor: text;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+        }
+
+        .project-item-content {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
         @media (max-width: 768px) {
             body {
                 flex-direction: column;
@@ -305,7 +334,7 @@
 </head>
 <body>
     <div class="sidebar">
-        <h2>Projects</h2>
+        <h2>Ultra Kanban</h2>
         <div class="project-list" id="projectList">
             <div class="project-item active" data-project="default">
                 Default Project
@@ -414,11 +443,59 @@
                 const projectDiv = document.createElement('div');
                 projectDiv.className = `project-item ${projectId === currentProject ? 'active' : ''}`;
                 projectDiv.setAttribute('data-project', projectId);
-                projectDiv.innerHTML = `
-                    ${projects[projectId].name}
-                    ${projectId !== 'default' ? '<button class="delete-task" onclick="deleteProject(\'' + projectId + '\', event)" style="float: right; margin-top: -2px;">×</button>' : ''}
-                `;
-                projectDiv.onclick = () => switchProject(projectId);
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'project-item-content';
+                
+                const nameInput = document.createElement('input');
+                nameInput.type = 'text';
+                nameInput.className = 'project-name';
+                nameInput.value = projects[projectId].name;
+                nameInput.readOnly = true;
+                nameInput.setAttribute('data-project-id', projectId);
+                
+                // Double-click to edit
+                nameInput.addEventListener('dblclick', () => startEditingProjectName(nameInput, projectId));
+                
+                // Handle enter/escape keys
+                nameInput.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        finishEditingProjectName(nameInput, projectId);
+                    } else if (e.key === 'Escape') {
+                        cancelEditingProjectName(nameInput, projectId);
+                    }
+                });
+                
+                // Handle blur (clicking outside)
+                nameInput.addEventListener('blur', () => {
+                    if (!nameInput.readOnly) {
+                        finishEditingProjectName(nameInput, projectId);
+                    }
+                });
+                
+                contentDiv.appendChild(nameInput);
+                
+                // Add delete button for non-default projects
+                if (projectId !== 'default') {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.className = 'delete-task';
+                    deleteBtn.textContent = '×';
+                    deleteBtn.onclick = (e) => deleteProject(projectId, e);
+                    contentDiv.appendChild(deleteBtn);
+                }
+                
+                projectDiv.appendChild(contentDiv);
+                
+                // Click to switch project (but not when editing)
+                projectDiv.onclick = (e) => {
+                    if (e.target === nameInput && !nameInput.readOnly) {
+                        return; // Don't switch if editing
+                    }
+                    if (e.target.className !== 'delete-task') {
+                        switchProject(projectId);
+                    }
+                };
+                
                 projectList.appendChild(projectDiv);
             });
         }
@@ -606,6 +683,34 @@
                 addProject();
             }
         });
+
+        // Project name editing functions
+        function startEditingProjectName(input, projectId) {
+            input.readOnly = false;
+            input.focus();
+            input.select();
+            input.setAttribute('data-original-value', input.value);
+        }
+        
+        function finishEditingProjectName(input, projectId) {
+            const newName = input.value.trim();
+            if (newName && newName !== '') {
+                projects[projectId].name = newName;
+                document.getElementById('currentProject').textContent = projects[currentProject].name;
+                saveData();
+            } else {
+                // Revert to original value if empty
+                input.value = input.getAttribute('data-original-value');
+            }
+            input.readOnly = true;
+            input.removeAttribute('data-original-value');
+        }
+        
+        function cancelEditingProjectName(input, projectId) {
+            input.value = input.getAttribute('data-original-value');
+            input.readOnly = true;
+            input.removeAttribute('data-original-value');
+        }
 
         // Initialize the application
         loadData();
