@@ -2,7 +2,8 @@
   "permissions": {
     "allow": [
       "Bash(wrangler:*)",
-      "Bash(git init:*)"
+      "Bash(git init:*)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }
