@@ -675,27 +675,31 @@
         }
 
         .project-action-btn.duplicate {
-            color: #059669;
+            color: #ffffff;
             border-color: #10b981;
-            background: #ecfdf5;
+            background: #10b981;
+            font-weight: 800;
         }
 
         .project-action-btn.duplicate:hover {
-            background: #d1fae5;
-            color: #047857;
-            border-color: #059669;
+            background: #059669;
+            color: #ffffff;
+            border-color: #047857;
+            transform: translateY(-2px);
         }
 
         .project-action-btn.delete {
-            color: #dc2626;
+            color: #ffffff;
             border-color: #ef4444;
-            background: #fef2f2;
+            background: #ef4444;
+            font-weight: 800;
         }
 
         .project-action-btn.delete:hover {
-            background: #fee2e2;
-            color: #b91c1c;
-            border-color: #dc2626;
+            background: #dc2626;
+            color: #ffffff;
+            border-color: #b91c1c;
+            transform: translateY(-2px);
         }
 
         .task-count {
@@ -1626,7 +1630,7 @@
                 // Duplicate button
                 const duplicateBtn = document.createElement('button');
                 duplicateBtn.className = 'project-action-btn duplicate';
-                duplicateBtn.textContent = '⧉';
+                duplicateBtn.textContent = 'COPY';
                 duplicateBtn.title = 'Duplicate project';
                 duplicateBtn.onclick = (e) => duplicateProject(projectId, e);
                 actionsDiv.appendChild(duplicateBtn);
@@ -1635,7 +1639,7 @@
                 if (projectId !== 'default') {
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'project-action-btn delete';
-                    deleteBtn.textContent = '×';
+                    deleteBtn.textContent = 'DEL';
                     deleteBtn.title = 'Delete project';
                     deleteBtn.onclick = (e) => deleteProject(projectId, e);
                     actionsDiv.appendChild(deleteBtn);
