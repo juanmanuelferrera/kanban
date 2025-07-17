@@ -52,8 +52,8 @@
         .project-item {
             background: #ffffff !important;
             border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 6px;
+            padding: 8px;
+            margin-bottom: 4px;
             cursor: grab;
             transition: all 0.3s ease;
             color: #000000 !important;
@@ -62,7 +62,7 @@
             text-transform: uppercase !important;
             font-weight: 700 !important;
             letter-spacing: 0.8px;
-            font-size: 14px !important;
+            font-size: 12px !important;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
             text-shadow: none !important;
             -webkit-text-fill-color: #000000 !important;
@@ -641,84 +641,45 @@
             gap: 8px;
         }
 
-        .project-actions {
-            display: flex !important;
-            gap: 6px !important;
-            opacity: 1 !important;
-            transition: all 0.3s ease !important;
-            margin-left: auto !important;
-            background: yellow !important;
-            padding: 2px !important;
-            border: 2px solid black !important;
-            visibility: visible !important;
+        .project-context-menu {
+            position: fixed;
+            background: #ffffff;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+            padding: 4px 0;
+            z-index: 1000;
+            display: none;
+            min-width: 150px;
         }
 
-        .project-item:hover .project-actions {
-            opacity: 1;
-            transform: scale(1.1);
+        .context-menu-item {
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 14px;
+            color: #374151;
+            transition: background-color 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
         }
 
-        .project-action-btn {
-            background: #ffffff !important;
-            border: 3px solid #000000 !important;
-            border-radius: 3px !important;
-            padding: 5px 10px !important;
-            cursor: pointer !important;
-            font-size: 14px !important;
-            font-weight: 900 !important;
-            transition: all 0.2s ease !important;
-            color: #000000 !important;
-            min-width: 40px !important;
-            text-align: center !important;
-            box-shadow: 0 3px 6px rgba(0, 0, 0, 0.5) !important;
-            height: 30px !important;
-            line-height: 1 !important;
-            display: block !important;
-            visibility: visible !important;
-            opacity: 1 !important;
+        .context-menu-item:hover {
+            background: #f3f4f6;
         }
 
-        .project-action-btn:hover {
-            background: #f9fafb;
-            transform: translateY(-1px);
-            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+        .context-menu-item.duplicate {
+            color: #059669;
         }
 
-        .project-action-btn.duplicate {
-            color: #ffffff !important;
-            border-color: #10b981 !important;
-            background: #10b981 !important;
-            font-weight: 800 !important;
-            box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3) !important;
+        .context-menu-item.delete {
+            color: #dc2626;
         }
 
-        .project-action-btn.duplicate:hover {
-            background: #059669 !important;
-            color: #ffffff !important;
-            border-color: #047857 !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4) !important;
+        .context-menu-item.delete:hover {
+            background: #fef2f2;
         }
 
-        .project-action-btn.delete {
-            color: #ffffff !important;
-            border-color: #dc2626 !important;
-            background: #dc2626 !important;
-            font-weight: 800 !important;
-            box-shadow: 0 3px 8px rgba(220, 38, 38, 0.5) !important;
-            font-size: 11px !important;
-            height: 22px !important;
-            padding: 3px 8px !important;
-            min-width: 26px !important;
-        }
-
-        .project-action-btn.delete:hover {
-            background: #b91c1c !important;
-            color: #ffffff !important;
-            border-color: #991b1b !important;
-            transform: translateY(-2px) !important;
-            box-shadow: 0 6px 12px rgba(220, 38, 38, 0.6) !important;
-        }
 
         .task-count {
             background: rgba(244, 67, 54, 0.8);
@@ -1004,6 +965,16 @@
                 <div class="column-header">DONE</div>
                 <div class="task-list" id="doneList"></div>
             </div>
+        </div>
+    </div>
+
+    <!-- Context Menu for Projects -->
+    <div class="project-context-menu" id="projectContextMenu">
+        <div class="context-menu-item duplicate" onclick="duplicateProjectFromMenu()">
+            <span>📄</span> Duplicate Project
+        </div>
+        <div class="context-menu-item delete" onclick="deleteProjectFromMenu()">
+            <span>🗑️</span> Delete Project
         </div>
     </div>
 
@@ -1641,29 +1612,11 @@
                 countBadge.title = `${taskCount} tareas pendientes`;
                 contentDiv.appendChild(countBadge);
                 
-                // Add action buttons
-                const actionsDiv = document.createElement('div');
-                actionsDiv.className = 'project-actions';
-                
-                // Duplicate button
-                const duplicateBtn = document.createElement('button');
-                duplicateBtn.className = 'project-action-btn duplicate';
-                duplicateBtn.textContent = 'COPY';
-                duplicateBtn.title = 'Duplicate project';
-                duplicateBtn.onclick = (e) => duplicateProject(projectId, e);
-                actionsDiv.appendChild(duplicateBtn);
-                
-                // Delete button (only for non-default projects)
-                if (projectId !== 'default') {
-                    const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'project-action-btn delete';
-                    deleteBtn.textContent = '🗑️';
-                    deleteBtn.title = 'Delete project';
-                    deleteBtn.onclick = (e) => deleteProject(projectId, e);
-                    actionsDiv.appendChild(deleteBtn);
-                }
-                
-                contentDiv.appendChild(actionsDiv);
+                // Add right-click context menu
+                projectDiv.addEventListener('contextmenu', (e) => {
+                    e.preventDefault();
+                    showProjectContextMenu(e, projectId);
+                });
                 
                 projectDiv.appendChild(contentDiv);
                 
@@ -1952,6 +1905,50 @@
             setTimeout(() => {
                 notification.remove();
             }, 3000);
+        }
+
+        // Context menu functionality
+        let contextMenuProjectId = null;
+
+        function showProjectContextMenu(event, projectId) {
+            const contextMenu = document.getElementById('projectContextMenu');
+            contextMenuProjectId = projectId;
+            
+            // Show/hide delete option for default project
+            const deleteItem = contextMenu.querySelector('.delete');
+            if (projectId === 'default') {
+                deleteItem.style.display = 'none';
+            } else {
+                deleteItem.style.display = 'flex';
+            }
+            
+            // Position and show context menu
+            contextMenu.style.left = event.clientX + 'px';
+            contextMenu.style.top = event.clientY + 'px';
+            contextMenu.style.display = 'block';
+            
+            // Close context menu when clicking elsewhere
+            document.addEventListener('click', hideProjectContextMenu);
+        }
+
+        function hideProjectContextMenu() {
+            const contextMenu = document.getElementById('projectContextMenu');
+            contextMenu.style.display = 'none';
+            document.removeEventListener('click', hideProjectContextMenu);
+        }
+
+        function duplicateProjectFromMenu() {
+            if (contextMenuProjectId) {
+                duplicateProject(contextMenuProjectId, { stopPropagation: () => {} });
+                hideProjectContextMenu();
+            }
+        }
+
+        function deleteProjectFromMenu() {
+            if (contextMenuProjectId && contextMenuProjectId !== 'default') {
+                deleteProject(contextMenuProjectId, { stopPropagation: () => {} });
+                hideProjectContextMenu();
+            }
         }
 
         function closeProjectModal() {
