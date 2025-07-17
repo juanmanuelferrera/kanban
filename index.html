@@ -641,6 +641,53 @@
             gap: 8px;
         }
 
+        .project-actions {
+            display: flex;
+            gap: 4px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+        }
+
+        .project-item:hover .project-actions {
+            opacity: 1;
+        }
+
+        .project-action-btn {
+            background: #f3f4f6;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            padding: 4px 6px;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all 0.2s ease;
+            color: #6b7280;
+            min-width: 20px;
+            text-align: center;
+        }
+
+        .project-action-btn:hover {
+            background: #e5e7eb;
+            color: #374151;
+        }
+
+        .project-action-btn.duplicate {
+            color: #059669;
+        }
+
+        .project-action-btn.duplicate:hover {
+            background: #d1fae5;
+            color: #047857;
+        }
+
+        .project-action-btn.delete {
+            color: #dc2626;
+        }
+
+        .project-action-btn.delete:hover {
+            background: #fee2e2;
+            color: #b91c1c;
+        }
+
         .task-count {
             background: rgba(244, 67, 54, 0.8);
             color: white;
@@ -1564,14 +1611,29 @@
                 countBadge.title = `${taskCount} tareas pendientes`;
                 contentDiv.appendChild(countBadge);
                 
-                // Add delete button for non-default projects
+                // Add action buttons
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'project-actions';
+                
+                // Duplicate button
+                const duplicateBtn = document.createElement('button');
+                duplicateBtn.className = 'project-action-btn duplicate';
+                duplicateBtn.textContent = '⧉';
+                duplicateBtn.title = 'Duplicate project';
+                duplicateBtn.onclick = (e) => duplicateProject(projectId, e);
+                actionsDiv.appendChild(duplicateBtn);
+                
+                // Delete button (only for non-default projects)
                 if (projectId !== 'default') {
                     const deleteBtn = document.createElement('button');
-                    deleteBtn.className = 'delete-task';
+                    deleteBtn.className = 'project-action-btn delete';
                     deleteBtn.textContent = '×';
+                    deleteBtn.title = 'Delete project';
                     deleteBtn.onclick = (e) => deleteProject(projectId, e);
-                    contentDiv.appendChild(deleteBtn);
+                    actionsDiv.appendChild(deleteBtn);
                 }
+                
+                contentDiv.appendChild(actionsDiv);
                 
                 projectDiv.appendChild(contentDiv);
                 
@@ -1811,7 +1873,7 @@
 
         function deleteProject(projectId, event) {
             event.stopPropagation();
-            if (confirm('Are you sure you want to delete this project?')) {
+            if (confirm('Are you sure you want to delete this project? This action cannot be undone.')) {
                 delete projects[projectId];
                 if (currentProject === projectId) {
                     switchProject('default');
@@ -1819,6 +1881,47 @@
                 renderProjects();
                 saveData();
             }
+        }
+
+        function duplicateProject(projectId, event) {
+            event.stopPropagation();
+            const originalProject = projects[projectId];
+            const newProjectId = 'project_' + Date.now();
+            const newProjectName = originalProject.name + ' COPY';
+            
+            projects[newProjectId] = {
+                name: newProjectName,
+                title: originalProject.title + ' Copy',
+                tasks: {
+                    todo: [...originalProject.tasks.todo],
+                    doing: [...originalProject.tasks.doing],
+                    done: [...originalProject.tasks.done]
+                }
+            };
+            
+            renderProjects();
+            saveData();
+            
+            // Show feedback
+            const notification = document.createElement('div');
+            notification.textContent = `Project "${newProjectName}" created successfully!`;
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: #10b981;
+                color: white;
+                padding: 12px 20px;
+                border-radius: 8px;
+                z-index: 1000;
+                font-size: 14px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            `;
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 3000);
         }
 
         function closeProjectModal() {
