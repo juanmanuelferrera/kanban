@@ -21,7 +21,7 @@
         }
 
         .sidebar {
-            width: 250px;
+            width: 350px;
             background: #f8fafc;
             border-right: 1px solid #e5e7eb;
             padding: 20px;
@@ -61,14 +61,13 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
             text-transform: uppercase !important;
             font-weight: 700 !important;
-            letter-spacing: -1.5px;
+            letter-spacing: -0.5px;
             font-size: 12px !important;
             font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
             text-shadow: none !important;
             -webkit-text-fill-color: #000000 !important;
             opacity: 1 !important;
-            font-stretch: ultra-condensed;
-            transform: scaleX(0.8);
+            font-stretch: condensed;
         }
 
         .project-item:active {
@@ -120,7 +119,7 @@
 
         .main-content {
             flex: 1;
-            padding: 5px 20px;
+            padding: 5px 30px;
             display: flex;
             flex-direction: column;
             min-width: 0;
@@ -178,7 +177,7 @@
         .column {
             background: #ffffff;
             border-radius: 12px;
-            padding: 16px;
+            padding: 24px;
             height: 100%;
             width: 100%;
             border: 1px solid #e5e7eb;
@@ -484,19 +483,19 @@
         }
 
         .todo-column.drag-over {
-            background: linear-gradient(to bottom, 
+            background: linear-gradient(to bottom,
                 rgba(244, 67, 54, 0.25) 0%,
                 rgba(255, 152, 0, 0.2) 100%);
         }
 
         .doing-column.drag-over {
-            background: linear-gradient(to bottom, 
+            background: linear-gradient(to bottom,
                 rgba(255, 193, 7, 0.25) 0%,
                 rgba(255, 235, 59, 0.2) 100%);
         }
 
         .done-column.drag-over {
-            background: linear-gradient(to bottom, 
+            background: linear-gradient(to bottom,
                 rgba(76, 175, 80, 0.25) 0%,
                 rgba(139, 195, 74, 0.2) 100%);
         }
@@ -883,19 +882,19 @@
             body {
                 flex-direction: column;
             }
-            
+
             .sidebar {
                 width: 100%;
                 height: auto;
                 max-height: 200px;
             }
-            
+
             .kanban-board {
                 grid-template-columns: 1fr;
                 gap: 16px;
                 padding: 0 12px;
             }
-            
+
             .main-content {
                 padding: 16px;
             }
@@ -908,13 +907,13 @@
         <div class="password-container">
             <h1>🔒 Ultra Kanban</h1>
             <p>Ingresa la contraseña para acceder a tus proyectos</p>
-            
+
             <div id="loginForm">
                 <input type="password" class="password-input" id="passwordInput" placeholder="Contraseña" autocomplete="current-password">
                 <button class="password-btn" onclick="checkPassword()">Ingresar</button>
                 <div class="password-error" id="passwordError">Contraseña incorrecta</div>
             </div>
-            
+
             <div class="password-setup" id="setupForm" style="display: none;">
                 <h3>Configurar Contraseña</h3>
                 <p>Es la primera vez que accedes. Establece una contraseña:</p>
@@ -936,13 +935,13 @@
             </div>
         </div>
         <button class="add-project" onclick="createProject()">+ Add Project</button>
-        
+
         <div class="trash-section" id="trashSection" style="display: none;">
             <h3 style="color: #6b7280; font-size: 12px; margin: 10px 0 5px 0; text-transform: uppercase;">Trash</h3>
             <div class="trash-list" id="trashList"></div>
             <button class="empty-trash-btn" onclick="emptyTrash()" style="background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; padding: 6px 12px; border-radius: 6px; font-size: 11px; width: 100%; margin-top: 5px;">Empty Trash</button>
         </div>
-        
+
         <div class="backup-controls">
             <button class="backup-btn" onclick="exportData()">
                 <span style="font-size: 12px;">📥</span>
@@ -1044,12 +1043,12 @@
         let currentProject = 'default';
         let currentColumn = '';
         let draggedTask = null;
-        
+
         // Data version for migration support
         const DATA_VERSION = '1.1.0';
         const BACKUP_PREFIX = 'kanban_backup_';
         const MAX_BACKUPS = 10;
-        
+
         let projects = {
             'default': {
                 name: 'Default Project',
@@ -1108,7 +1107,7 @@
             validateData(data) {
                 if (!data || typeof data !== 'object') return false;
                 if (!data.version || !data.projects || !data.currentProject) return false;
-                
+
                 for (const [projectId, project] of Object.entries(data.projects)) {
                     if (!project.name || !project.title || !project.tasks) return false;
                     if (!project.tasks.todo || !project.tasks.doing || !project.tasks.done) return false;
@@ -1127,7 +1126,7 @@
                     projectTrash: structuredClone(projectTrash),
                     metadata: {
                         totalProjects: Object.keys(projects).length,
-                        totalTasks: Object.values(projects).reduce((sum, p) => 
+                        totalTasks: Object.values(projects).reduce((sum, p) =>
                             sum + p.tasks.todo.length + p.tasks.doing.length + p.tasks.done.length, 0),
                         trashedProjects: projectTrash.length
                     }
@@ -1169,7 +1168,7 @@
             // Load from storage with fallback
             async load() {
                 let data = null;
-                
+
                 // Try IndexedDB first
                 if (this.db) {
                     try {
@@ -1190,7 +1189,7 @@
                         const savedProjects = localStorage.getItem(this.storageKey);
                         const savedCurrentProject = localStorage.getItem(this.currentProjectKey);
                         const savedVersion = localStorage.getItem(this.versionKey);
-                        
+
                         if (savedProjects) {
                             data = {
                                 version: savedVersion || '1.0.0',
@@ -1198,7 +1197,7 @@
                                 currentProject: savedCurrentProject || 'default',
                                 timestamp: localStorage.getItem(this.lastBackupKey) || new Date().toISOString()
                             };
-                            
+
                             if (!this.validateData(data)) {
                                 throw new Error('Data validation failed');
                             }
@@ -1215,12 +1214,12 @@
             // Create backup in IndexedDB
             async createBackup() {
                 if (!this.db) return false;
-                
+
                 try {
                     const data = this.createDataPackage();
                     const transaction = this.db.transaction(['backups'], 'readwrite');
                     const store = transaction.objectStore('backups');
-                    
+
                     const backupId = `backup_${Date.now()}`;
                     await store.put({
                         id: backupId,
@@ -1240,18 +1239,18 @@
             // Clean old backups (keep only MAX_BACKUPS)
             async cleanOldBackups() {
                 if (!this.db) return;
-                
+
                 try {
                     const transaction = this.db.transaction(['backups'], 'readwrite');
                     const store = transaction.objectStore('backups');
                     const index = store.index('timestamp');
-                    
+
                     const allBackups = await index.getAll();
                     if (allBackups.length > MAX_BACKUPS) {
                         const toDelete = allBackups
                             .sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp))
                             .slice(0, allBackups.length - MAX_BACKUPS);
-                        
+
                         for (const backup of toDelete) {
                             await store.delete(backup.id);
                         }
@@ -1273,7 +1272,7 @@
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                
+
                 this.updateBackupStatus({ export: true });
             }
 
@@ -1282,23 +1281,23 @@
                 try {
                     const text = await file.text();
                     const importedData = JSON.parse(text);
-                    
+
                     if (!this.validateData(importedData)) {
                         throw new Error('Invalid data format');
                     }
 
                     // Create backup before import
                     await this.createBackup();
-                    
+
                     // Apply imported data
                     projects = importedData.projects;
                     currentProject = importedData.currentProject || 'default';
-                    
+
                     // Save and render
                     await this.save();
                     renderProjects();
                     switchProject(currentProject);
-                    
+
                     this.updateBackupStatus({ import: true });
                     return true;
                 } catch (error) {
@@ -1312,7 +1311,7 @@
             updateBackupStatus(success) {
                 const statusEl = document.getElementById('backupStatus');
                 const now = new Date().toLocaleTimeString();
-                
+
                 if (success.export) {
                     statusEl.textContent = `Exported at ${now}`;
                     statusEl.style.color = 'rgba(76, 175, 80, 0.8)';
@@ -1329,7 +1328,7 @@
                     statusEl.textContent = `Save failed at ${now}`;
                     statusEl.style.color = 'rgba(244, 67, 54, 0.8)';
                 }
-                
+
                 setTimeout(() => {
                     statusEl.textContent = 'Auto-saving...';
                     statusEl.style.color = 'rgba(255, 255, 255, 0.7)';
@@ -1383,7 +1382,7 @@
             isSessionValid() {
                 const sessionData = sessionStorage.getItem(this.sessionKey);
                 if (!sessionData) return false;
-                
+
                 try {
                     const session = JSON.parse(sessionData);
                     return Date.now() < session.expires;
@@ -1403,7 +1402,7 @@
         async function checkPassword() {
             const password = document.getElementById('passwordInput').value;
             const errorDiv = document.getElementById('passwordError');
-            
+
             if (!password) {
                 errorDiv.style.display = 'block';
                 errorDiv.textContent = 'Ingresa una contraseña';
@@ -1426,7 +1425,7 @@
             const newPassword = document.getElementById('newPasswordInput').value;
             const confirmPassword = document.getElementById('confirmPasswordInput').value;
             const errorDiv = document.getElementById('setupError');
-            
+
             if (!newPassword || newPassword.length < 4) {
                 errorDiv.style.display = 'block';
                 errorDiv.textContent = 'La contraseña debe tener al menos 4 caracteres';
@@ -1480,7 +1479,7 @@
             if (e.key === 'Enter') {
                 if (document.getElementById('passwordInput') === document.activeElement) {
                     checkPassword();
-                } else if (document.getElementById('confirmPasswordInput') === document.activeElement || 
+                } else if (document.getElementById('confirmPasswordInput') === document.activeElement ||
                           document.getElementById('newPasswordInput') === document.activeElement) {
                     setupPassword();
                 }
@@ -1499,7 +1498,7 @@
             } catch (error) {
                 console.error('Failed to load data:', error);
             }
-            
+
             renderProjects();
             renderTrash();
             switchProject(currentProject);
@@ -1613,25 +1612,25 @@
         function renderProjects() {
             const projectList = document.getElementById('projectList');
             projectList.innerHTML = '';
-            
+
             Object.keys(projects).forEach(projectId => {
                 const projectDiv = document.createElement('div');
                 projectDiv.className = `project-item ${projectId === currentProject ? 'active' : ''}`;
                 projectDiv.setAttribute('data-project', projectId);
-                
+
                 const contentDiv = document.createElement('div');
                 contentDiv.className = 'project-item-content';
-                
+
                 const nameInput = document.createElement('input');
                 nameInput.type = 'text';
                 nameInput.className = 'project-name';
                 nameInput.value = projects[projectId].name;
                 nameInput.readOnly = true;
                 nameInput.setAttribute('data-project-id', projectId);
-                
+
                 // Double-click to edit
                 nameInput.addEventListener('dblclick', () => startEditingProjectName(nameInput, projectId));
-                
+
                 // Handle enter/escape keys
                 nameInput.addEventListener('keydown', (e) => {
                     if (e.key === 'Enter') {
@@ -1640,16 +1639,16 @@
                         cancelEditingProjectName(nameInput, projectId);
                     }
                 });
-                
+
                 // Handle blur (clicking outside)
                 nameInput.addEventListener('blur', () => {
                     if (!nameInput.readOnly) {
                         finishEditingProjectName(nameInput, projectId);
                     }
                 });
-                
+
                 contentDiv.appendChild(nameInput);
-                
+
                 // Add task count badge
                 const taskCount = projects[projectId].tasks.todo.length;
                 const countBadge = document.createElement('span');
@@ -1657,15 +1656,15 @@
                 countBadge.textContent = taskCount;
                 countBadge.title = `${taskCount} tareas pendientes`;
                 contentDiv.appendChild(countBadge);
-                
+
                 // Add right-click context menu
                 projectDiv.addEventListener('contextmenu', (e) => {
                     e.preventDefault();
                     showProjectContextMenu(e, projectId);
                 });
-                
+
                 projectDiv.appendChild(contentDiv);
-                
+
                 // Click to switch project (but not when editing)
                 // Add drag and drop functionality
                 projectDiv.draggable = true;
@@ -1673,7 +1672,7 @@
                 projectDiv.addEventListener('dragover', handleProjectDragOver);
                 projectDiv.addEventListener('drop', handleProjectDrop);
                 projectDiv.addEventListener('dragend', handleProjectDragEnd);
-                
+
                 projectDiv.onclick = (e) => {
                     if (e.target === nameInput && !nameInput.readOnly) {
                         return; // Don't switch if editing
@@ -1682,7 +1681,7 @@
                         switchProject(projectId);
                     }
                 };
-                
+
                 projectList.appendChild(projectDiv);
             });
         }
@@ -1699,12 +1698,12 @@
         function handleProjectDragOver(e) {
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
-            
+
             // Remove existing drag-over classes
             document.querySelectorAll('.project-item').forEach(item => {
                 item.classList.remove('drag-over');
             });
-            
+
             // Add drag-over class to current target
             const targetProject = e.target.closest('.project-item');
             if (targetProject && targetProject !== e.currentTarget) {
@@ -1715,11 +1714,11 @@
         function handleProjectDrop(e) {
             e.preventDefault();
             const targetProjectId = e.target.closest('.project-item').getAttribute('data-project');
-            
+
             if (draggedProject && targetProjectId && draggedProject !== targetProjectId) {
                 reorderProjects(draggedProject, targetProjectId);
             }
-            
+
             // Clean up
             document.querySelectorAll('.project-item').forEach(item => {
                 item.classList.remove('drag-over');
@@ -1738,20 +1737,20 @@
             const projectKeys = Object.keys(projects);
             const draggedIndex = projectKeys.indexOf(draggedId);
             const targetIndex = projectKeys.indexOf(targetId);
-            
+
             if (draggedIndex !== -1 && targetIndex !== -1) {
                 // Remove dragged project from array
                 projectKeys.splice(draggedIndex, 1);
                 // Insert at target position
                 projectKeys.splice(targetIndex, 0, draggedId);
-                
+
                 // Rebuild projects object in new order
                 const reorderedProjects = {};
                 projectKeys.forEach(key => {
                     reorderedProjects[key] = projects[key];
                 });
                 projects = reorderedProjects;
-                
+
                 saveData();
                 renderProjects();
             }
@@ -1762,13 +1761,13 @@
             currentProject = projectId;
             document.getElementById('currentProject').textContent = projects[projectId].name;
             document.getElementById('boardTitle').value = projects[projectId].title;
-            
+
             // Update active project in sidebar
             document.querySelectorAll('.project-item').forEach(item => {
                 item.classList.remove('active');
             });
             document.querySelector(`[data-project="${projectId}"]`).classList.add('active');
-            
+
             // Render tasks for current project
             renderTasks();
             saveData();
@@ -1780,7 +1779,7 @@
             columns.forEach(column => {
                 const taskList = document.getElementById(column + 'List');
                 taskList.innerHTML = '';
-                
+
                 projects[currentProject].tasks[column].forEach((task, index) => {
                     // Create drop indicator
                     const dropIndicator = document.createElement('div');
@@ -1788,18 +1787,18 @@
                     dropIndicator.setAttribute('data-drop-index', index);
                     dropIndicator.setAttribute('data-column', column);
                     taskList.appendChild(dropIndicator);
-                    
+
                     // Create task item
                     const taskDiv = document.createElement('div');
                     taskDiv.className = 'task-item';
                     taskDiv.draggable = true;
                     taskDiv.setAttribute('data-task-id', index);
                     taskDiv.setAttribute('data-column', column);
-                    
+
                     // Create task wrapper
                     const wrapperDiv = document.createElement('div');
                     wrapperDiv.className = 'task-item-wrapper';
-                    
+
                     // Create editable task content
                     const taskContent = document.createElement('div');
                     taskContent.className = 'task-content';
@@ -1807,13 +1806,13 @@
                     taskContent.textContent = task;
                     taskContent.setAttribute('data-task-id', index);
                     taskContent.setAttribute('data-column', column);
-                    
+
                     // Add single-click to edit and double-click to copy
                     let clickTimer = null;
                     taskContent.addEventListener('click', (e) => {
                         // Prevent editing when dragging
                         if (e.target.closest('.task-item').classList.contains('dragging')) return;
-                        
+
                         if (clickTimer) {
                             // This is a double-click
                             clearTimeout(clickTimer);
@@ -1829,7 +1828,7 @@
                             }, 250);
                         }
                     });
-                    
+
                     // Handle enter/escape keys
                     taskContent.addEventListener('keydown', (e) => {
                         if (e.key === 'Enter' && !e.shiftKey) {
@@ -1839,33 +1838,33 @@
                             cancelEditingTask(taskContent, column, index);
                         }
                     });
-                    
+
                     // Handle blur (clicking outside)
                     taskContent.addEventListener('blur', () => {
                         if (taskContent.contentEditable === 'true') {
                             finishEditingTask(taskContent, column, index);
                         }
                     });
-                    
+
                     // Create delete button
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'delete-task';
                     deleteBtn.textContent = '×';
                     deleteBtn.onclick = () => deleteTask(column, index);
-                    
+
                     wrapperDiv.appendChild(taskContent);
                     wrapperDiv.appendChild(deleteBtn);
                     taskDiv.appendChild(wrapperDiv);
-                    
+
                     // Add drag event listeners
                     taskDiv.addEventListener('dragstart', handleTaskDragStart);
                     taskDiv.addEventListener('dragend', handleTaskDragEnd);
                     taskDiv.addEventListener('dragover', handleTaskDragOver);
                     taskDiv.addEventListener('drop', handleTaskDrop);
-                    
+
                     taskList.appendChild(taskDiv);
                 });
-                
+
                 // Add final drop indicator
                 const finalDropIndicator = document.createElement('div');
                 finalDropIndicator.className = 'drop-indicator';
@@ -1910,17 +1909,17 @@
                     trashedAt: Date.now()
                 };
                 projectTrash.push(trashedProject);
-                
+
                 // Remove from active projects
                 delete projects[projectId];
                 if (currentProject === projectId) {
                     switchProject('default');
                 }
-                
+
                 renderProjects();
                 renderTrash();
                 saveData();
-                
+
                 // Show success message
                 showNotification(`Project "${trashedProject.name}" moved to trash`, '#dc2626');
             }
@@ -1931,7 +1930,7 @@
             const originalProject = projects[projectId];
             const newProjectId = 'project_' + Date.now();
             const newProjectName = originalProject.name + ' COPY';
-            
+
             projects[newProjectId] = {
                 name: newProjectName,
                 title: originalProject.title + ' Copy',
@@ -1941,10 +1940,10 @@
                     done: [...originalProject.tasks.done]
                 }
             };
-            
+
             renderProjects();
             saveData();
-            
+
             // Show feedback
             const notification = document.createElement('div');
             notification.textContent = `Project "${newProjectName}" created successfully!`;
@@ -1961,7 +1960,7 @@
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             `;
             document.body.appendChild(notification);
-            
+
             setTimeout(() => {
                 notification.remove();
             }, 3000);
@@ -1973,7 +1972,7 @@
         function showProjectContextMenu(event, projectId) {
             const contextMenu = document.getElementById('projectContextMenu');
             contextMenuProjectId = projectId;
-            
+
             // Show/hide delete option for default project
             const deleteItem = contextMenu.querySelector('.delete');
             if (projectId === 'default') {
@@ -1981,12 +1980,12 @@
             } else {
                 deleteItem.style.display = 'flex';
             }
-            
+
             // Position and show context menu
             contextMenu.style.left = event.clientX + 'px';
             contextMenu.style.top = event.clientY + 'px';
             contextMenu.style.display = 'block';
-            
+
             // Close context menu when clicking elsewhere
             document.addEventListener('click', hideProjectContextMenu);
         }
@@ -2017,11 +2016,11 @@
         function showTrashContextMenu(event, trashIndex) {
             const contextMenu = document.getElementById('trashContextMenu');
             contextMenuTrashIndex = trashIndex;
-            
+
             contextMenu.style.left = event.clientX + 'px';
             contextMenu.style.top = event.clientY + 'px';
             contextMenu.style.display = 'block';
-            
+
             document.addEventListener('click', hideTrashContextMenu);
         }
 
@@ -2049,34 +2048,34 @@
         function renderTrash() {
             const trashList = document.getElementById('trashList');
             const trashSection = document.getElementById('trashSection');
-            
+
             if (projectTrash.length === 0) {
                 trashSection.style.display = 'none';
                 return;
             }
-            
+
             trashSection.style.display = 'block';
             trashList.innerHTML = '';
-            
+
             projectTrash.forEach((trashedProject, index) => {
                 const trashItem = document.createElement('div');
                 trashItem.className = 'trash-item';
                 trashItem.setAttribute('data-trash-index', index);
-                
+
                 const daysAgo = Math.floor((Date.now() - trashedProject.trashedAt) / (1000 * 60 * 60 * 24));
                 const timeText = daysAgo === 0 ? 'Today' : `${daysAgo} days ago`;
-                
+
                 trashItem.innerHTML = `
                     <div class="trash-item-name">${trashedProject.name}</div>
                     <div style="font-size: 10px; color: #9ca3af;">${timeText}</div>
                 `;
-                
+
                 // Add right-click context menu for trash items
                 trashItem.addEventListener('contextmenu', (e) => {
                     e.preventDefault();
                     showTrashContextMenu(e, index);
                 });
-                
+
                 trashList.appendChild(trashItem);
             });
         }
@@ -2084,13 +2083,13 @@
         function restoreProject(trashIndex) {
             const trashedProject = projectTrash[trashIndex];
             if (!trashedProject) return;
-            
+
             // Generate new ID if original ID exists
             let newId = trashedProject.originalId;
             if (projects[newId]) {
                 newId = 'project_' + Date.now();
             }
-            
+
             // Restore project
             projects[newId] = {
                 name: trashedProject.name,
@@ -2099,21 +2098,21 @@
                 tasks: trashedProject.tasks,
                 taskMetadata: trashedProject.taskMetadata || {}
             };
-            
+
             // Remove from trash
             projectTrash.splice(trashIndex, 1);
-            
+
             renderProjects();
             renderTrash();
             saveData();
-            
+
             showNotification(`Project "${trashedProject.name}" restored successfully!`, '#10b981');
         }
 
         function permanentDelete(trashIndex) {
             const trashedProject = projectTrash[trashIndex];
             if (!trashedProject) return;
-            
+
             if (confirm(`Permanently delete "${trashedProject.name}"? This cannot be undone.`)) {
                 projectTrash.splice(trashIndex, 1);
                 renderTrash();
@@ -2124,7 +2123,7 @@
 
         function emptyTrash() {
             if (projectTrash.length === 0) return;
-            
+
             if (confirm(`Permanently delete all ${projectTrash.length} projects in trash? This cannot be undone.`)) {
                 projectTrash = [];
                 renderTrash();
@@ -2150,7 +2149,7 @@
                 box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
             `;
             document.body.appendChild(notification);
-            
+
             setTimeout(() => {
                 notification.remove();
             }, 3000);
@@ -2194,17 +2193,17 @@
         function startEditingTask(element, column, index) {
             element.contentEditable = true;
             element.focus();
-            
+
             // Select all text
             const range = document.createRange();
             range.selectNodeContents(element);
             const selection = window.getSelection();
             selection.removeAllRanges();
             selection.addRange(range);
-            
+
             element.setAttribute('data-original-value', element.textContent);
         }
-        
+
         function finishEditingTask(element, column, index) {
             const newText = element.textContent.trim();
             if (newText && newText !== '') {
@@ -2217,7 +2216,7 @@
             element.contentEditable = false;
             element.removeAttribute('data-original-value');
         }
-        
+
         function cancelEditingTask(element, column, index) {
             element.textContent = element.getAttribute('data-original-value');
             element.contentEditable = false;
@@ -2227,7 +2226,7 @@
         // Copy task text to clipboard
         async function copyTaskText(element) {
             const text = element.textContent.trim();
-            
+
             try {
                 await navigator.clipboard.writeText(text);
                 showCopyFeedback(element, 'Copied!');
@@ -2255,16 +2254,16 @@
             const feedback = document.createElement('div');
             feedback.className = 'copy-feedback';
             feedback.textContent = message;
-            
+
             const rect = element.getBoundingClientRect();
             feedback.style.left = rect.left + rect.width / 2 - 25 + 'px';
             feedback.style.top = rect.top - 10 + 'px';
-            
+
             document.body.appendChild(feedback);
-            
+
             // Animate in
             setTimeout(() => feedback.classList.add('show'), 10);
-            
+
             // Remove after animation
             setTimeout(() => {
                 feedback.classList.remove('show');
@@ -2284,31 +2283,31 @@
             draggedTask = e.target;
             const taskId = parseInt(e.target.getAttribute('data-task-id'));
             const column = e.target.getAttribute('data-column');
-            
+
             draggedTaskData = {
                 taskId: taskId,
                 column: column,
                 content: projects[currentProject].tasks[column][taskId]
             };
-            
+
             e.target.classList.add('dragging');
-            
+
             // Determine if this is reordering within the same column or moving between columns
             e.dataTransfer.effectAllowed = 'move';
         }
 
         function handleTaskDragEnd(e) {
             e.target.classList.remove('dragging', 'reordering');
-            
+
             // Clear all drop indicators
             document.querySelectorAll('.drop-indicator').forEach(indicator => {
                 indicator.classList.remove('active');
             });
-            
+
             document.querySelectorAll('.task-list').forEach(list => {
                 list.classList.remove('drag-over-reorder');
             });
-            
+
             draggedTask = null;
             draggedTaskData = null;
             isReordering = false;
@@ -2316,25 +2315,25 @@
 
         function handleTaskDragOver(e) {
             e.preventDefault();
-            
+
             if (!draggedTask || !draggedTaskData) return;
-            
+
             const rect = e.target.getBoundingClientRect();
             const midpoint = rect.top + rect.height / 2;
             const isAbove = e.clientY < midpoint;
-            
+
             // Find the closest drop indicator
             const taskElement = e.target.closest('.task-item');
             if (taskElement) {
                 const taskList = taskElement.parentElement;
                 const indicators = taskList.querySelectorAll('.drop-indicator');
-                
+
                 // Clear all indicators first
                 indicators.forEach(indicator => indicator.classList.remove('active'));
-                
+
                 const taskId = parseInt(taskElement.getAttribute('data-task-id'));
                 const column = taskElement.getAttribute('data-column');
-                
+
                 // Activate appropriate indicator
                 if (isAbove) {
                     const indicator = taskList.querySelector(`[data-drop-index="${taskId}"]`);
@@ -2343,7 +2342,7 @@
                     const indicator = taskList.querySelector(`[data-drop-index="${taskId + 1}"]`);
                     if (indicator) indicator.classList.add('active');
                 }
-                
+
                 // Add visual feedback for reordering vs moving
                 if (column === draggedTaskData.column) {
                     taskList.classList.add('drag-over-reorder');
@@ -2360,36 +2359,36 @@
         function handleTaskDrop(e) {
             e.preventDefault();
             e.stopPropagation();
-            
+
             if (!draggedTask || !draggedTaskData) return;
-            
+
             const targetElement = e.target.closest('.task-item');
             if (!targetElement) return;
-            
+
             const targetTaskId = parseInt(targetElement.getAttribute('data-task-id'));
             const targetColumn = targetElement.getAttribute('data-column');
-            
+
             const rect = targetElement.getBoundingClientRect();
             const midpoint = rect.top + rect.height / 2;
             const isAbove = e.clientY < midpoint;
-            
+
             // Calculate drop position
             let dropIndex = isAbove ? targetTaskId : targetTaskId + 1;
-            
+
             // Handle the drop
             const sourceColumn = draggedTaskData.column;
             const sourceIndex = draggedTaskData.taskId;
-            
+
             if (sourceColumn === targetColumn) {
                 // Reordering within the same column
                 if (sourceIndex !== dropIndex && sourceIndex !== dropIndex - 1) {
                     const task = projects[currentProject].tasks[sourceColumn].splice(sourceIndex, 1)[0];
-                    
+
                     // Adjust drop index if we removed an item before it
                     if (sourceIndex < dropIndex) {
                         dropIndex--;
                     }
-                    
+
                     projects[currentProject].tasks[targetColumn].splice(dropIndex, 0, task);
                     renderTasks();
                     saveData();
@@ -2438,18 +2437,18 @@
         function handleDrop(e) {
             e.preventDefault();
             e.currentTarget.classList.remove('drag-over');
-            
+
             if (draggedTask) {
                 const sourceColumn = draggedTask.getAttribute('data-column');
                 const targetColumn = e.currentTarget.getAttribute('data-column');
                 const taskIndex = parseInt(draggedTask.getAttribute('data-task-id'));
-                
+
                 if (sourceColumn !== targetColumn) {
                     // Move task between columns
                     const task = projects[currentProject].tasks[sourceColumn][taskIndex];
                     projects[currentProject].tasks[sourceColumn].splice(taskIndex, 1);
                     projects[currentProject].tasks[targetColumn].push(task);
-                    
+
                     renderTasks();
                     saveData();
                 }
@@ -2470,7 +2469,7 @@
                 showAddTaskModal('todo');
                 return;
             }
-            
+
             if (e.key === 'Escape') {
                 closeModal();
                 closeProjectModal();
@@ -2488,7 +2487,7 @@
             input.select();
             input.setAttribute('data-original-value', input.value);
         }
-        
+
         function finishEditingProjectName(input, projectId) {
             const newName = input.value.trim().toUpperCase();
             if (newName && newName !== '') {
@@ -2502,7 +2501,7 @@
             input.readOnly = true;
             input.removeAttribute('data-original-value');
         }
-        
+
         function cancelEditingProjectName(input, projectId) {
             input.value = input.getAttribute('data-original-value');
             input.readOnly = true;
