@@ -937,6 +937,11 @@
         </div>
         <button class="add-project" onclick="createProject()">+ Add Project</button>
         
+        <div class="trash-section" id="trashSection" style="display: none;">
+            <h3 style="color: #6b7280; font-size: 12px; margin: 10px 0 5px 0; text-transform: uppercase;">Trash</h3>
+            <div class="trash-list" id="trashList"></div>
+            <button class="empty-trash-btn" onclick="emptyTrash()" style="background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; padding: 6px 12px; border-radius: 6px; font-size: 11px; width: 100%; margin-top: 5px;">Empty Trash</button>
+        </div>
         
         <div class="backup-controls">
             <button class="backup-btn" onclick="exportData()">
@@ -958,27 +963,10 @@
             <div class="backup-status" id="backupStatus" style="grid-column: 1 / -1; text-align: center; margin-top: 4px; color: #6b7280; font-size: 9px;">Auto-saving...</div>
             <input type="file" id="importInput" class="import-input" accept=".json" onchange="importData(event)">
             <input type="file" id="tasksImportInput" class="import-input" accept=".txt,.md" onchange="importTasksFromFile(event)">
-            <!-- Bottom row with logout and trash buttons -->
-            <div style="grid-column: 1 / -1; display: flex; gap: 4px; margin-top: 4px;">
-                <button class="backup-btn" onclick="lockApp()" style="background: #fef2f2; border-color: #fca5a5; color: #dc2626; flex: 1;">
-                    <span style="font-size: 12px;">🔒</span>
-                    Logout
-                </button>
-                <button class="backup-btn" onclick="toggleTrash()" style="background: #f9fafb; border-color: #d1d5db; color: #6b7280; flex: 3;">
-                    <span style="font-size: 12px;">🗑️</span>
-                    <span id="trashButtonText">Trash</span>
-                    <span id="trashCount" style="background: #dc2626; color: white; border-radius: 10px; padding: 1px 6px; font-size: 10px; margin-left: 4px; display: none;">0</span>
-                </button>
-            </div>
-            
-            <!-- Trash section (hidden by default) -->
-            <div class="trash-section" id="trashSection" style="grid-column: 1 / -1; display: none; margin-top: 8px; background: #f9fafb; border-radius: 8px; padding: 8px;">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
-                    <h3 style="color: #6b7280; font-size: 11px; margin: 0; text-transform: uppercase;">Trash</h3>
-                    <button onclick="emptyTrash()" style="background: #dc2626; color: white; border: none; border-radius: 4px; padding: 2px 8px; font-size: 10px; cursor: pointer;">Empty</button>
-                </div>
-                <div class="trash-list" id="trashList"></div>
-            </div>
+            <button class="backup-btn" onclick="lockApp()" style="background: #fef2f2; border-color: #fca5a5; color: #dc2626; grid-column: 1 / -1; margin-top: 4px;">
+                <span style="font-size: 12px;">🔒</span>
+                Logout
+            </button>
         </div>
     </div>
 
@@ -2058,39 +2046,17 @@
         }
 
         // Trash management functions
-        function toggleTrash() {
-            const trashSection = document.getElementById('trashSection');
-            const trashButtonText = document.getElementById('trashButtonText');
-            
-            if (trashSection.style.display === 'none' || !trashSection.style.display) {
-                trashSection.style.display = 'block';
-                trashButtonText.textContent = 'Hide Trash';
-                renderTrash();
-            } else {
-                trashSection.style.display = 'none';
-                trashButtonText.textContent = 'Trash';
-            }
-        }
-
         function renderTrash() {
             const trashList = document.getElementById('trashList');
-            const trashCount = document.getElementById('trashCount');
-            
-            // Update trash count badge
-            if (projectTrash.length > 0) {
-                trashCount.textContent = projectTrash.length;
-                trashCount.style.display = 'inline';
-            } else {
-                trashCount.style.display = 'none';
-            }
-            
-            // Clear and populate trash list
-            trashList.innerHTML = '';
+            const trashSection = document.getElementById('trashSection');
             
             if (projectTrash.length === 0) {
-                trashList.innerHTML = '<div style="color: #9ca3af; font-size: 11px; text-align: center; padding: 8px;">No deleted projects</div>';
+                trashSection.style.display = 'none';
                 return;
             }
+            
+            trashSection.style.display = 'block';
+            trashList.innerHTML = '';
             
             projectTrash.forEach((trashedProject, index) => {
                 const trashItem = document.createElement('div');
@@ -2102,7 +2068,7 @@
                 
                 trashItem.innerHTML = `
                     <div class="trash-item-name">${trashedProject.name}</div>
-                    <div style="font-size: 9px; color: #9ca3af;">${timeText}</div>
+                    <div style="font-size: 10px; color: #9ca3af;">${timeText}</div>
                 `;
                 
                 // Add right-click context menu for trash items
