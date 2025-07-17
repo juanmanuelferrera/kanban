@@ -1672,7 +1672,7 @@
         }
 
         function addProject() {
-            const projectName = document.getElementById('projectInput').value.trim();
+            const projectName = document.getElementById('projectInput').value.trim().toUpperCase();
             if (projectName) {
                 const projectId = 'project_' + Date.now();
                 projects[projectId] = {
@@ -2036,7 +2036,7 @@
         }
         
         function finishEditingProjectName(input, projectId) {
-            const newName = input.value.trim();
+            const newName = input.value.trim().toUpperCase();
             if (newName && newName !== '') {
                 projects[projectId].name = newName;
                 document.getElementById('currentProject').textContent = projects[currentProject].name;
