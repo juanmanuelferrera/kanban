@@ -698,7 +698,11 @@
             border-color: #dc2626 !important;
             background: #dc2626 !important;
             font-weight: 800 !important;
-            box-shadow: 0 2px 4px rgba(220, 38, 38, 0.3) !important;
+            box-shadow: 0 3px 8px rgba(220, 38, 38, 0.5) !important;
+            font-size: 11px !important;
+            height: 22px !important;
+            padding: 3px 8px !important;
+            min-width: 26px !important;
         }
 
         .project-action-btn.delete:hover {
@@ -706,7 +710,7 @@
             color: #ffffff !important;
             border-color: #991b1b !important;
             transform: translateY(-2px) !important;
-            box-shadow: 0 4px 8px rgba(220, 38, 38, 0.4) !important;
+            box-shadow: 0 6px 12px rgba(220, 38, 38, 0.6) !important;
         }
 
         .task-count {
@@ -1646,7 +1650,7 @@
                 if (projectId !== 'default') {
                     const deleteBtn = document.createElement('button');
                     deleteBtn.className = 'project-action-btn delete';
-                    deleteBtn.textContent = 'DEL';
+                    deleteBtn.textContent = '🗑️';
                     deleteBtn.title = 'Delete project';
                     deleteBtn.onclick = (e) => deleteProject(projectId, e);
                     actionsDiv.appendChild(deleteBtn);
