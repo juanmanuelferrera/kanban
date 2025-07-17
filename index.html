@@ -187,6 +187,21 @@
             box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
+        .column.todo {
+            background: linear-gradient(to bottom, #ffffff 0%, #eff6ff 100%);
+            border-left: 4px solid #3b82f6;
+        }
+
+        .column.doing {
+            background: linear-gradient(to bottom, #ffffff 0%, #fef2f2 100%);
+            border-left: 4px solid #ef4444;
+        }
+
+        .column.done {
+            background: linear-gradient(to bottom, #ffffff 0%, #f3f4f6 100%);
+            border-left: 4px solid #8b5cf6;
+        }
+
 
         .column-header {
             font-size: 16px;
@@ -197,6 +212,18 @@
             padding: 0;
             background: transparent;
             position: relative;
+        }
+
+        .column.todo .column-header {
+            color: #1d4ed8;
+        }
+
+        .column.doing .column-header {
+            color: #dc2626;
+        }
+
+        .column.done .column-header {
+            color: #7c3aed;
         }
 
         .sorting-controls {
@@ -883,19 +910,19 @@
         </div>
 
         <div class="kanban-board">
-            <div class="column todo-column" data-column="todo">
+            <div class="column todo" data-column="todo">
                 <div class="column-header">TO DO</div>
                 <div class="task-list" id="todoList"></div>
                 <div class="add-task" onclick="showAddTaskModal('todo')">+ Add Task</div>
             </div>
 
-            <div class="column doing-column" data-column="doing">
+            <div class="column doing" data-column="doing">
                 <div class="column-header">DOING</div>
                 <div class="task-list" id="doingList"></div>
                 <div class="add-task" onclick="showAddTaskModal('doing')">+ Add Task</div>
             </div>
 
-            <div class="column done-column" data-column="done">
+            <div class="column done" data-column="done">
                 <div class="column-header">DONE</div>
                 <div class="task-list" id="doneList"></div>
                 <div class="add-task" onclick="showAddTaskModal('done')">+ Add Task</div>
