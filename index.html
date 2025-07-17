@@ -643,49 +643,60 @@
 
         .project-actions {
             display: flex;
-            gap: 4px;
-            opacity: 0;
-            transition: opacity 0.2s ease;
+            gap: 6px;
+            opacity: 0.3;
+            transition: all 0.3s ease;
+            margin-left: auto;
         }
 
         .project-item:hover .project-actions {
             opacity: 1;
+            transform: scale(1.05);
         }
 
         .project-action-btn {
-            background: #f3f4f6;
-            border: 1px solid #d1d5db;
-            border-radius: 4px;
-            padding: 4px 6px;
+            background: #ffffff;
+            border: 2px solid #d1d5db;
+            border-radius: 6px;
+            padding: 6px 8px;
             cursor: pointer;
-            font-size: 10px;
+            font-size: 12px;
+            font-weight: 600;
             transition: all 0.2s ease;
-            color: #6b7280;
-            min-width: 20px;
+            color: #374151;
+            min-width: 24px;
             text-align: center;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .project-action-btn:hover {
-            background: #e5e7eb;
-            color: #374151;
+            background: #f9fafb;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
         }
 
         .project-action-btn.duplicate {
             color: #059669;
+            border-color: #10b981;
+            background: #ecfdf5;
         }
 
         .project-action-btn.duplicate:hover {
             background: #d1fae5;
             color: #047857;
+            border-color: #059669;
         }
 
         .project-action-btn.delete {
             color: #dc2626;
+            border-color: #ef4444;
+            background: #fef2f2;
         }
 
         .project-action-btn.delete:hover {
             background: #fee2e2;
             color: #b91c1c;
+            border-color: #dc2626;
         }
 
         .task-count {
