@@ -46,6 +46,7 @@
         .project-list {
             flex: 1;
             overflow-y: auto;
+            min-height: 200px;
         }
 
         .project-item {
@@ -53,7 +54,7 @@
             border-radius: 8px;
             padding: 12px;
             margin-bottom: 6px;
-            cursor: pointer;
+            cursor: grab;
             transition: all 0.3s ease;
             color: #000000 !important;
             border: 1px solid #e5e7eb;
@@ -66,6 +67,20 @@
             text-shadow: none !important;
             -webkit-text-fill-color: #000000 !important;
             opacity: 1 !important;
+        }
+
+        .project-item:active {
+            cursor: grabbing;
+        }
+
+        .project-item.dragging {
+            opacity: 0.5;
+            transform: rotate(2deg);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .project-item.drag-over {
+            border-top: 3px solid #3b82f6;
         }
 
         .project-item:hover {
@@ -1534,6 +1549,13 @@
                 projectDiv.appendChild(contentDiv);
                 
                 // Click to switch project (but not when editing)
+                // Add drag and drop functionality
+                projectDiv.draggable = true;
+                projectDiv.addEventListener('dragstart', handleProjectDragStart);
+                projectDiv.addEventListener('dragover', handleProjectDragOver);
+                projectDiv.addEventListener('drop', handleProjectDrop);
+                projectDiv.addEventListener('dragend', handleProjectDragEnd);
+                
                 projectDiv.onclick = (e) => {
                     if (e.target === nameInput && !nameInput.readOnly) {
                         return; // Don't switch if editing
@@ -1545,6 +1567,76 @@
                 
                 projectList.appendChild(projectDiv);
             });
+        }
+
+        // Project drag and drop functionality
+        let draggedProject = null;
+
+        function handleProjectDragStart(e) {
+            draggedProject = e.target.getAttribute('data-project');
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleProjectDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            
+            // Remove existing drag-over classes
+            document.querySelectorAll('.project-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+            
+            // Add drag-over class to current target
+            const targetProject = e.target.closest('.project-item');
+            if (targetProject && targetProject !== e.currentTarget) {
+                targetProject.classList.add('drag-over');
+            }
+        }
+
+        function handleProjectDrop(e) {
+            e.preventDefault();
+            const targetProjectId = e.target.closest('.project-item').getAttribute('data-project');
+            
+            if (draggedProject && targetProjectId && draggedProject !== targetProjectId) {
+                reorderProjects(draggedProject, targetProjectId);
+            }
+            
+            // Clean up
+            document.querySelectorAll('.project-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+        }
+
+        function handleProjectDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.project-item').forEach(item => {
+                item.classList.remove('drag-over');
+            });
+            draggedProject = null;
+        }
+
+        function reorderProjects(draggedId, targetId) {
+            const projectKeys = Object.keys(projects);
+            const draggedIndex = projectKeys.indexOf(draggedId);
+            const targetIndex = projectKeys.indexOf(targetId);
+            
+            if (draggedIndex !== -1 && targetIndex !== -1) {
+                // Remove dragged project from array
+                projectKeys.splice(draggedIndex, 1);
+                // Insert at target position
+                projectKeys.splice(targetIndex, 0, draggedId);
+                
+                // Rebuild projects object in new order
+                const reorderedProjects = {};
+                projectKeys.forEach(key => {
+                    reorderedProjects[key] = projects[key];
+                });
+                projects = reorderedProjects;
+                
+                saveData();
+                renderProjects();
+            }
         }
 
         // Switch between projects
