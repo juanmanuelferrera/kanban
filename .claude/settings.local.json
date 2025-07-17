@@ -3,7 +3,9 @@
     "allow": [
       "Bash(wrangler:*)",
       "Bash(git init:*)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ],
     "deny": []
   }
