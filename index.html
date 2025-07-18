@@ -1211,6 +1211,7 @@
         class FirebaseStorageManager {
             constructor() {
                 this.userId = 'user_' + this.generateUserId(); // Simple user ID for demo
+                this.workspaceId = 'personal'; // Default workspace
                 this.isOnline = navigator.onLine;
                 this.initializeOfflineSupport();
             }
@@ -1320,10 +1321,10 @@
                 // Save to Firebase if online
                 if (this.isOnline && window.database) {
                     try {
-                        const userRef = window.firebaseRef(window.database, `users/${this.userId}`);
-                        await window.firebaseSet(userRef, data);
+                        const workspaceRef = window.firebaseRef(window.database, `workspaces/${this.workspaceId}/data`);
+                        await window.firebaseSet(workspaceRef, data);
                         success.firebase = true;
-                        console.log('Data saved to Firebase successfully');
+                        console.log(`Data saved to Firebase workspace: ${this.workspaceId}`);
                     } catch (error) {
                         console.error('Firebase save failed:', error);
                         // Mark for offline sync
@@ -1341,11 +1342,11 @@
                 // Try to load from Firebase first if online
                 if (this.isOnline && window.database) {
                     try {
-                        const userRef = window.firebaseRef(window.database, `users/${this.userId}`);
-                        const snapshot = await window.firebaseGet(userRef);
+                        const workspaceRef = window.firebaseRef(window.database, `workspaces/${this.workspaceId}/data`);
+                        const snapshot = await window.firebaseGet(workspaceRef);
                         if (snapshot.exists()) {
                             data = snapshot.val();
-                            console.log('Data loaded from Firebase successfully');
+                            console.log(`Data loaded from Firebase workspace: ${this.workspaceId}`);
                             
                             // Setup real-time listener
                             this.setupRealtimeListener();
@@ -1385,8 +1386,8 @@
             setupRealtimeListener() {
                 if (!window.database) return;
 
-                const userRef = window.firebaseRef(window.database, `users/${this.userId}`);
-                window.firebaseOnValue(userRef, (snapshot) => {
+                const workspaceRef = window.firebaseRef(window.database, `workspaces/${this.workspaceId}/data`);
+                window.firebaseOnValue(workspaceRef, (snapshot) => {
                     if (snapshot.exists()) {
                         const data = snapshot.val();
                         // Only update if the data is newer
@@ -3147,8 +3148,173 @@
             setTimeout(refreshData, 500); // Small delay to ensure everything is loaded
         });
 
+        // Workspace Management System
+        let currentWorkspace = 'personal';
+        let userWorkspaces = {};
+
+        // Initialize workspace system
+        function initializeWorkspaces() {
+            // Load user's workspaces from localStorage
+            const savedWorkspaces = localStorage.getItem('userWorkspaces');
+            if (savedWorkspaces) {
+                userWorkspaces = JSON.parse(savedWorkspaces);
+            } else {
+                // Create default personal workspace
+                userWorkspaces = {
+                    'personal': {
+                        id: 'personal',
+                        name: '📁 Personal Workspace',
+                        type: 'private',
+                        owner: storage.userId,
+                        created: new Date().toISOString()
+                    }
+                };
+                localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+            }
+            
+            renderWorkspaceDropdown();
+        }
+
+        function renderWorkspaceDropdown() {
+            const dropdown = document.getElementById('workspaceSelect');
+            dropdown.innerHTML = '';
+            
+            Object.values(userWorkspaces).forEach(workspace => {
+                const option = document.createElement('option');
+                option.value = workspace.id;
+                option.textContent = workspace.name;
+                if (workspace.type === 'shared') {
+                    option.textContent += ' (Shared)';
+                }
+                dropdown.appendChild(option);
+            });
+            
+            dropdown.value = currentWorkspace;
+            dropdown.addEventListener('change', switchWorkspace);
+        }
+
+        function showWorkspaceModal() {
+            document.getElementById('workspaceModal').style.display = 'flex';
+        }
+
+        function closeWorkspaceModal() {
+            document.getElementById('workspaceModal').style.display = 'none';
+            document.getElementById('newWorkspaceName').value = '';
+            document.getElementById('workspaceId').value = '';
+            document.getElementById('isPrivateWorkspace').checked = false;
+        }
+
+        function createWorkspace() {
+            const name = document.getElementById('newWorkspaceName').value.trim();
+            const isPrivate = document.getElementById('isPrivateWorkspace').checked;
+            
+            if (!name) {
+                alert('Please enter a workspace name');
+                return;
+            }
+            
+            const workspaceId = isPrivate ? 
+                `private_${storage.userId}_${Date.now()}` : 
+                `shared_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            
+            const workspace = {
+                id: workspaceId,
+                name: `${isPrivate ? '🔒' : '👥'} ${name}`,
+                type: isPrivate ? 'private' : 'shared',
+                owner: storage.userId,
+                created: new Date().toISOString()
+            };
+            
+            userWorkspaces[workspaceId] = workspace;
+            localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+            
+            renderWorkspaceDropdown();
+            switchWorkspace({ target: { value: workspaceId } });
+            closeWorkspaceModal();
+            
+            if (!isPrivate) {
+                // Show sharing info for shared workspaces
+                const shareUrl = `${window.location.origin}${window.location.pathname}?workspace=${workspaceId}`;
+                alert(`Workspace created! Share this link with team members:\n\n${shareUrl}`);
+            }
+        }
+
+        function joinWorkspace() {
+            const input = document.getElementById('workspaceId').value.trim();
+            if (!input) {
+                alert('Please enter a workspace ID or invite link');
+                return;
+            }
+            
+            // Extract workspace ID from URL or use direct ID
+            let workspaceId = input;
+            if (input.includes('workspace=')) {
+                const urlParams = new URLSearchParams(input.split('?')[1]);
+                workspaceId = urlParams.get('workspace');
+            }
+            
+            // Create workspace entry for user
+            const workspace = {
+                id: workspaceId,
+                name: `👥 Shared Workspace`,
+                type: 'shared',
+                owner: 'shared',
+                joined: new Date().toISOString()
+            };
+            
+            userWorkspaces[workspaceId] = workspace;
+            localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+            
+            renderWorkspaceDropdown();
+            switchWorkspace({ target: { value: workspaceId } });
+            closeWorkspaceModal();
+        }
+
+        async function switchWorkspace(event) {
+            const newWorkspaceId = event.target.value;
+            if (newWorkspaceId === currentWorkspace) return;
+            
+            // Save current workspace data
+            await saveData();
+            
+            // Switch to new workspace
+            currentWorkspace = newWorkspaceId;
+            
+            // Update storage to use workspace-specific data
+            storage.workspaceId = currentWorkspace;
+            
+            // Load new workspace data
+            await loadData();
+            
+            console.log(`🏢 Switched to workspace: ${userWorkspaces[currentWorkspace]?.name}`);
+        }
+
         // Initialize the application with password protection
         console.log('🚀 Starting app initialization...');
+        
+        // Initialize workspaces first
+        initializeWorkspaces();
+        
+        // Check for workspace in URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const workspaceFromUrl = urlParams.get('workspace');
+        if (workspaceFromUrl) {
+            currentWorkspace = workspaceFromUrl;
+            storage.workspaceId = currentWorkspace;
+            
+            // Add workspace to user's list if not already there
+            if (!userWorkspaces[workspaceFromUrl]) {
+                userWorkspaces[workspaceFromUrl] = {
+                    id: workspaceFromUrl,
+                    name: '👥 Shared Workspace',
+                    type: 'shared',
+                    owner: 'shared',
+                    joined: new Date().toISOString()
+                };
+                localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+                renderWorkspaceDropdown();
+            }
+        }
         
         // Wait for Firebase to be ready, then initialize
         setTimeout(() => {
