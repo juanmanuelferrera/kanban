@@ -1634,6 +1634,7 @@
                 this.passwordKey = 'ultraKanbanPassword';
                 this.sessionKey = 'ultraKanbanSession';
                 this.sessionDuration = 365 * 24 * 60 * 60 * 1000; // 1 year
+                this.userId = storage.userId; // Use same user ID as storage
             }
 
             async hashPassword(password) {
@@ -1646,17 +1647,60 @@
 
             async setPassword(password) {
                 const hashedPassword = await this.hashPassword(password);
+                
+                // Save to both localStorage (for offline) and Firebase (for sync)
                 localStorage.setItem(this.passwordKey, hashedPassword);
+                
+                if (window.database) {
+                    try {
+                        const passwordRef = window.firebaseRef(window.database, `passwords/${this.userId}`);
+                        await window.firebaseSet(passwordRef, {
+                            hash: hashedPassword,
+                            created: new Date().toISOString()
+                        });
+                    } catch (error) {
+                        console.error('Failed to save password to Firebase:', error);
+                    }
+                }
             }
 
             async checkPassword(password) {
-                const storedHash = localStorage.getItem(this.passwordKey);
-                if (!storedHash) return false;
                 const hashedPassword = await this.hashPassword(password);
-                return hashedPassword === storedHash;
+                
+                // Check Firebase first (for cross-device sync)
+                if (window.database) {
+                    try {
+                        const passwordRef = window.firebaseRef(window.database, `passwords/${this.userId}`);
+                        const snapshot = await window.firebaseGet(passwordRef);
+                        if (snapshot.exists()) {
+                            const data = snapshot.val();
+                            return data.hash === hashedPassword;
+                        }
+                    } catch (error) {
+                        console.error('Failed to check password in Firebase:', error);
+                    }
+                }
+                
+                // Fallback to localStorage
+                const storedHash = localStorage.getItem(this.passwordKey);
+                return storedHash === hashedPassword;
             }
 
-            isPasswordSet() {
+            async isPasswordSet() {
+                // Check Firebase first
+                if (window.database) {
+                    try {
+                        const passwordRef = window.firebaseRef(window.database, `passwords/${this.userId}`);
+                        const snapshot = await window.firebaseGet(passwordRef);
+                        if (snapshot.exists()) {
+                            return true;
+                        }
+                    } catch (error) {
+                        console.error('Failed to check if password is set in Firebase:', error);
+                    }
+                }
+                
+                // Fallback to localStorage
                 return localStorage.getItem(this.passwordKey) !== null;
             }
 
@@ -1747,10 +1791,10 @@
         }
 
         // Initialize password protection
-        function initializePasswordProtection() {
+        async function initializePasswordProtection() {
             if (passwordManager.isSessionValid()) {
                 unlockApp();
-            } else if (passwordManager.isPasswordSet()) {
+            } else if (await passwordManager.isPasswordSet()) {
                 // Show login form
                 document.getElementById('loginForm').style.display = 'block';
                 document.getElementById('setupForm').style.display = 'none';
