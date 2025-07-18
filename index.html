@@ -1020,6 +1020,10 @@
                 <span style="font-size: 12px;">📝</span>
                 Tasks
             </button>
+            <button class="backup-btn" onclick="toggleTrash()">
+                <span style="font-size: 12px;">🗑️</span>
+                Trash
+            </button>
             <button class="backup-btn" onclick="createBackup()">
                 <span style="font-size: 12px;">💾</span>
                 Backup
@@ -1473,7 +1477,8 @@
                     // Update UI
                     renderProjects();
                     renderTasks();
-                    renderTrash();
+                    // Only render trash if currently visible
+                    if (trashVisible) renderTrash();
                     switchProject(currentProject);
 
                     this.updateBackupStatus({ export: false, import: true });
@@ -2010,7 +2015,7 @@
             }
 
             renderProjects();
-            renderTrash();
+            // Don't auto-render trash - only show when toggled
             switchProject(currentProject);
         }
 
@@ -2427,7 +2432,8 @@
                 }
 
                 renderProjects();
-                renderTrash();
+                // Only render trash if currently visible
+                if (trashVisible) renderTrash();
                 saveData();
 
                 // Show success message
@@ -2555,11 +2561,27 @@
         }
 
         // Trash management functions
+        // Track trash visibility state
+        let trashVisible = false;
+
+        function toggleTrash() {
+            const trashSection = document.getElementById('trashSection');
+            trashVisible = !trashVisible;
+            
+            if (trashVisible && projectTrash.length > 0) {
+                trashSection.style.display = 'block';
+                renderTrash();
+            } else {
+                trashSection.style.display = 'none';
+            }
+        }
+
         function renderTrash() {
             const trashList = document.getElementById('trashList');
             const trashSection = document.getElementById('trashSection');
 
-            if (projectTrash.length === 0) {
+            // Don't auto-show trash section, only render if already visible
+            if (!trashVisible || projectTrash.length === 0) {
                 trashSection.style.display = 'none';
                 return;
             }
@@ -2613,7 +2635,8 @@
             projectTrash.splice(trashIndex, 1);
 
             renderProjects();
-            renderTrash();
+            // Only render trash if currently visible
+            if (trashVisible) renderTrash();
             saveData();
 
             showNotification(`Project "${trashedProject.name}" restored successfully!`, '#10b981');
@@ -2625,7 +2648,8 @@
 
             if (confirm(`Permanently delete "${trashedProject.name}"? This cannot be undone.`)) {
                 projectTrash.splice(trashIndex, 1);
-                renderTrash();
+                // Only render trash if currently visible
+                if (trashVisible) renderTrash();
                 saveData();
                 showNotification(`Project "${trashedProject.name}" permanently deleted`, '#dc2626');
             }
@@ -2636,7 +2660,8 @@
 
             if (confirm(`Permanently delete all ${projectTrash.length} projects in trash? This cannot be undone.`)) {
                 projectTrash = [];
-                renderTrash();
+                // Only render trash if currently visible
+                if (trashVisible) renderTrash();
                 saveData();
                 showNotification('Trash emptied successfully', '#dc2626');
             }
