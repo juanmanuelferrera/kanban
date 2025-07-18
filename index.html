@@ -993,16 +993,149 @@
                 width: 100%;
                 height: auto;
                 max-height: 200px;
+                overflow-y: auto;
+                border-right: none;
+                border-bottom: 1px solid #e5e7eb;
+                padding: 10px;
+            }
+
+            .project-list {
+                display: grid;
+                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                gap: 6px;
+                min-height: auto;
+                max-height: 120px;
+                overflow-y: auto;
+            }
+
+            .project-item {
+                font-size: 9px !important;
+                padding: 3px 5px;
+                margin-bottom: 0;
+                text-align: center;
+            }
+
+            .task-count {
+                font-size: 9px;
+                padding: 2px 4px;
+                min-width: 16px;
             }
 
             .kanban-board {
                 grid-template-columns: 1fr;
                 gap: 16px;
                 padding: 0 12px;
+                min-width: auto;
+            }
+
+            .column {
+                min-height: 300px;
             }
 
             .main-content {
-                padding: 16px;
+                padding: 10px;
+                height: calc(100vh - 200px);
+            }
+
+            .header {
+                flex-direction: column;
+                gap: 10px;
+                margin-bottom: 10px;
+            }
+
+            .workspace-selector {
+                order: -1;
+                width: 100%;
+            }
+
+            .workspace-dropdown {
+                width: 100%;
+            }
+
+            .board-title {
+                font-size: 16px;
+                padding: 8px;
+            }
+
+            .add-project {
+                font-size: 12px;
+                padding: 8px;
+            }
+
+            .backup-controls {
+                margin-top: 8px;
+                padding-top: 8px;
+            }
+
+            .backup-btn {
+                font-size: 11px;
+                padding: 6px 8px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .sidebar {
+                max-height: 150px;
+                padding: 8px;
+            }
+
+            .project-list {
+                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                gap: 4px;
+                max-height: 80px;
+            }
+
+            .project-item {
+                font-size: 8px !important;
+                padding: 2px 4px;
+            }
+
+            .task-count {
+                font-size: 8px;
+                padding: 1px 3px;
+                min-width: 14px;
+            }
+
+            .main-content {
+                padding: 8px;
+                height: calc(100vh - 150px);
+            }
+
+            .column {
+                min-height: 250px;
+            }
+
+            .column h3 {
+                font-size: 14px;
+                padding: 8px;
+            }
+
+            .task {
+                font-size: 12px;
+                padding: 12px;
+                min-height: 44px;
+                touch-action: pan-y;
+            }
+
+            .task-actions {
+                gap: 12px;
+            }
+
+            .task-action {
+                min-width: 44px;
+                min-height: 44px;
+                padding: 8px;
+                font-size: 14px;
+            }
+
+            .board-title {
+                font-size: 14px;
+                padding: 6px;
+            }
+
+            .header {
+                gap: 8px;
+                margin-bottom: 8px;
             }
         }
     </style>
