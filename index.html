@@ -1149,8 +1149,11 @@
                 const sharedUserId = urlParams.get('user');
                 
                 if (sharedUserId) {
-                    localStorage.setItem('kanbanUserId', sharedUserId);
-                    return sharedUserId;
+                    // Clean the user ID - remove extra "user_" prefix if present
+                    const cleanUserId = sharedUserId.startsWith('user_user_') ? 
+                        sharedUserId.substring(5) : sharedUserId;
+                    localStorage.setItem('kanbanUserId', cleanUserId);
+                    return cleanUserId;
                 }
                 
                 // Check localStorage
@@ -1163,6 +1166,13 @@
                     // Show sharing info
                     this.showSharingInfo(userId);
                 }
+                
+                // Clean any existing double prefix
+                if (userId.startsWith('user_user_')) {
+                    userId = userId.substring(5);
+                    localStorage.setItem('kanbanUserId', userId);
+                }
+                
                 return userId;
             }
             
