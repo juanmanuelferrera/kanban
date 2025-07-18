@@ -3055,6 +3055,16 @@
         });
 
         // Initialize the application with password protection
+        console.log('🚀 Starting app initialization...');
+        
+        // Wait for Firebase to be ready, then initialize
+        setTimeout(() => {
+            console.log('🔥 Firebase ready, initializing password...');
+            initializePasswordProtection();
+        }, 1000);
+        
+        // Also call immediately in case Firebase is already ready
+        console.log('🔄 Calling immediate password init...');
         initializePasswordProtection();
     </script>
 </body>
