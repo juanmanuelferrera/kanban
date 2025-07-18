@@ -226,17 +226,18 @@
 
         .kanban-board {
             display: grid;
-            grid-template-columns: repeat(3, minmax(450px, 550px));
-            gap: 30px;
+            grid-template-columns: repeat(3, minmax(350px, 1fr));
+            gap: 20px;
             flex: 1;
             width: 100%;
-            max-width: 1800px;
+            max-width: 1400px;
             margin: 0 auto;
             align-items: stretch;
-            justify-content: center;
-            padding: 0 30px;
+            justify-content: start;
+            padding: 0 20px;
             box-sizing: border-box;
             height: 100%;
+            overflow-x: auto;
         }
 
         .column {
@@ -3283,8 +3284,17 @@
             // Update storage to use workspace-specific data
             storage.workspaceId = currentWorkspace;
             
+            // Clear current data
+            projects = { default: { todo: [], doing: [], done: [] } };
+            projectTrash = [];
+            
             // Load new workspace data
             await loadData();
+            
+            // Force UI refresh
+            renderProjects();
+            switchProject('default');
+            renderKanbanBoard();
             
             console.log(`🏢 Switched to workspace: ${userWorkspaces[currentWorkspace]?.name}`);
         }
