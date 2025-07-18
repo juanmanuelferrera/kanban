@@ -1817,11 +1817,14 @@
             }
 
             async isPasswordSet() {
+                console.log('🔍 Checking password for user ID:', this.userId);
+                
                 // Check Firebase first
                 if (window.database) {
                     try {
                         const passwordRef = window.firebaseRef(window.database, `passwords/${this.userId}`);
                         const snapshot = await window.firebaseGet(passwordRef);
+                        console.log('🔍 Firebase password check:', snapshot.exists() ? 'Password found' : 'No password found');
                         if (snapshot.exists()) {
                             return true;
                         }
@@ -1831,7 +1834,9 @@
                 }
                 
                 // Fallback to localStorage
-                return localStorage.getItem(this.passwordKey) !== null;
+                const localPassword = localStorage.getItem(this.passwordKey) !== null;
+                console.log('🔍 Local password check:', localPassword ? 'Password found' : 'No password found');
+                return localPassword;
             }
 
             createSession() {
