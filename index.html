@@ -331,11 +331,32 @@
             min-height: 22px;
             color: #374151;
             font-weight: 400;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 100%;
         }
 
         .task-content:hover {
+            white-space: normal;
+            overflow: visible;
             background: rgba(0, 0, 0, 0.03);
+            z-index: 10;
+            position: relative;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
         }
+
+        .task-content a {
+            color: #3b82f6;
+            text-decoration: underline;
+            cursor: pointer;
+        }
+
+        .task-content a:hover {
+            color: #1d4ed8;
+            text-decoration: none;
+        }
+
 
         .task-content:focus {
             background: #f3f4f6;
@@ -1803,7 +1824,7 @@
                     const taskContent = document.createElement('div');
                     taskContent.className = 'task-content';
                     taskContent.contentEditable = false;
-                    taskContent.textContent = task;
+                    taskContent.innerHTML = makeURLsClickable(task);
                     taskContent.setAttribute('data-task-id', index);
                     taskContent.setAttribute('data-column', column);
 
@@ -2208,6 +2229,7 @@
             const newText = element.textContent.trim();
             if (newText && newText !== '') {
                 projects[currentProject].tasks[column][index] = newText;
+                element.innerHTML = makeURLsClickable(newText);
                 saveData();
             } else {
                 // Revert to original value if empty
@@ -2528,6 +2550,12 @@
         window.addEventListener('focus', function() {
             refreshData();
         });
+
+        // Function to make URLs clickable
+        function makeURLsClickable(text) {
+            const urlRegex = /(https?:\/\/[^\s]+)/g;
+            return text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+        }
 
         // Periodic refresh every 2 minutes (in case of multi-device usage)
         setInterval(refreshData, 2 * 60 * 1000);
