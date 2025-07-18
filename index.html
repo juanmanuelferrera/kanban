@@ -1263,6 +1263,11 @@
                             currentProject = data.currentProject;
                             projectTrash = data.projectTrash || [];
                             
+                            // Ensure all projects have proper structure
+                            Object.keys(projects).forEach(projectId => {
+                                projects[projectId] = ensureProjectStructure(projects[projectId]);
+                            });
+                            
                             // Update UI
                             renderProjects();
                             renderTasks();
@@ -1820,6 +1825,21 @@
         });
 
         // Load data with enhanced persistence
+        // Ensure project has proper structure
+        function ensureProjectStructure(project) {
+            if (!project.tasks) {
+                project.tasks = {
+                    todo: [],
+                    doing: [],
+                    done: []
+                };
+            }
+            if (!project.tasks.todo) project.tasks.todo = [];
+            if (!project.tasks.doing) project.tasks.doing = [];
+            if (!project.tasks.done) project.tasks.done = [];
+            return project;
+        }
+
         async function loadData() {
             try {
                 const data = await storage.load();
@@ -1827,6 +1847,11 @@
                     projects = data.projects;
                     currentProject = data.currentProject;
                     projectTrash = data.projectTrash || [];
+                    
+                    // Ensure all projects have proper structure
+                    Object.keys(projects).forEach(projectId => {
+                        projects[projectId] = ensureProjectStructure(projects[projectId]);
+                    });
                 }
             } catch (error) {
                 console.error('Failed to load data:', error);
@@ -1983,7 +2008,7 @@
                 contentDiv.appendChild(nameInput);
 
                 // Add task count badge
-                const taskCount = projects[projectId].tasks.todo.length;
+                const taskCount = projects[projectId].tasks?.todo?.length || 0;
                 const countBadge = document.createElement('span');
                 countBadge.className = `task-count ${taskCount === 0 ? 'zero' : ''}`;
                 countBadge.textContent = taskCount;
