@@ -3028,12 +3028,7 @@
         });
 
         // Initialize the application with password protection
-        // Temporary bypass for debugging - remove after Firebase is working
-        if (window.location.search.includes('nopass')) {
-            unlockApp();
-        } else {
-            initializePasswordProtection();
-        }
+        initializePasswordProtection();
     </script>
 </body>
 </html>
