@@ -821,7 +821,7 @@
         }
 
         .task-count.zero {
-            background: #10b981 !important;
+            background: #fca5a5 !important;
             color: white !important;
         }
 
@@ -2200,6 +2200,10 @@
         function renderProjects() {
             const projectList = document.getElementById('projectList');
             projectList.innerHTML = '';
+            
+            // Add drag and drop event listeners to the container
+            projectList.addEventListener('dragover', handleProjectDragOver);
+            projectList.addEventListener('drop', handleProjectDrop);
 
             Object.keys(projects).forEach(projectId => {
                 const projectDiv = document.createElement('div');
@@ -2294,17 +2298,24 @@
 
             // Add drag-over class to current target
             const targetProject = e.target.closest('.project-item');
-            if (targetProject && targetProject !== e.currentTarget) {
+            if (targetProject && targetProject.getAttribute('data-project') !== draggedProject) {
                 targetProject.classList.add('drag-over');
             }
         }
 
         function handleProjectDrop(e) {
             e.preventDefault();
-            const targetProjectId = e.target.closest('.project-item').getAttribute('data-project');
+            e.stopPropagation();
+            
+            const targetElement = e.target.closest('.project-item');
+            if (!targetElement) return;
+            
+            const targetProjectId = targetElement.getAttribute('data-project');
 
             if (draggedProject && targetProjectId && draggedProject !== targetProjectId) {
                 reorderProjects(draggedProject, targetProjectId);
+                renderProjects(); // Re-render to show new order
+                saveData(); // Save the new order
             }
 
             // Clean up
