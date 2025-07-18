@@ -1937,18 +1937,30 @@
 
         // Initialize password protection
         async function initializePasswordProtection() {
+            console.log('🔐 Initializing password protection...');
+            console.log('🔍 User ID:', passwordManager.userId);
+            console.log('🔍 Storage User ID:', storage.userId);
+            
             if (passwordManager.isSessionValid()) {
+                console.log('✅ Valid session found, unlocking app');
                 unlockApp();
-            } else if (await passwordManager.isPasswordSet()) {
-                // Show login form
-                document.getElementById('loginForm').style.display = 'block';
-                document.getElementById('setupForm').style.display = 'none';
-                document.getElementById('passwordInput').focus();
             } else {
-                // Show setup form for first-time users
-                document.getElementById('loginForm').style.display = 'none';
-                document.getElementById('setupForm').style.display = 'block';
-                document.getElementById('newPasswordInput').focus();
+                const passwordSet = await passwordManager.isPasswordSet();
+                console.log('🔍 Password set?', passwordSet);
+                
+                if (passwordSet) {
+                    console.log('🔑 Password exists, showing login form');
+                    // Show login form
+                    document.getElementById('loginForm').style.display = 'block';
+                    document.getElementById('setupForm').style.display = 'none';
+                    document.getElementById('passwordInput').focus();
+                } else {
+                    console.log('🆕 No password found, showing setup form');
+                    // Show setup form for first-time users
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('setupForm').style.display = 'block';
+                    document.getElementById('newPasswordInput').focus();
+                }
             }
         }
 
