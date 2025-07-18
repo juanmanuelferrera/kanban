@@ -1362,6 +1362,80 @@
                     statusEl.style.color = 'rgba(255, 255, 255, 0.7)';
                 }, 3000);
             }
+
+            // Export data to JSON file
+            exportData() {
+                const data = {
+                    version: '1.0.0',
+                    projects: projects,
+                    currentProject: currentProject,
+                    projectTrash: projectTrash || [],
+                    timestamp: new Date().toISOString()
+                };
+                
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ultra-kanban-backup-${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                this.updateBackupStatus({ export: true, import: false });
+            }
+
+            // Import data from JSON file
+            async importData(file) {
+                try {
+                    const text = await file.text();
+                    const importedData = JSON.parse(text);
+
+                    if (!this.validateData(importedData)) {
+                        throw new Error('Invalid data format');
+                    }
+
+                    // Update global variables
+                    projects = importedData.projects;
+                    currentProject = importedData.currentProject;
+                    projectTrash = importedData.projectTrash || [];
+
+                    // Ensure all projects have proper structure
+                    Object.keys(projects).forEach(projectId => {
+                        projects[projectId] = ensureProjectStructure(projects[projectId]);
+                    });
+
+                    // Save to Firebase and localStorage
+                    await this.save();
+
+                    // Update UI
+                    renderProjects();
+                    renderTasks();
+                    renderTrash();
+                    switchProject(currentProject);
+
+                    this.updateBackupStatus({ export: false, import: true });
+                    this.showSyncNotification('Data imported successfully');
+
+                } catch (error) {
+                    console.error('Import failed:', error);
+                    alert('Import failed: ' + error.message);
+                }
+            }
+
+            // Validate imported data structure
+            validateData(data) {
+                if (!data || typeof data !== 'object') return false;
+                if (!data.version || !data.projects || !data.currentProject) return false;
+
+                for (const [projectId, project] of Object.entries(data.projects)) {
+                    if (!project.name || !project.title) return false;
+                    // Don't require tasks structure as we can fix it with ensureProjectStructure
+                }
+
+                return true;
+            }
         }
 
         // Legacy Storage Manager (keeping for backward compatibility)
