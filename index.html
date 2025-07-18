@@ -48,7 +48,7 @@
         }
 
         .sidebar {
-            width: 280px;
+            width: 250px;
             background: #f8fafc;
             border-right: 1px solid #e5e7eb;
             padding: 14px;
@@ -149,7 +149,7 @@
 
         .main-content {
             flex: 1;
-            padding: 5px 40px;
+            padding: 5px 15px;
             display: flex;
             flex-direction: column;
             min-width: 0;
@@ -226,18 +226,17 @@
 
         .kanban-board {
             display: grid;
-            grid-template-columns: repeat(3, minmax(350px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
             flex: 1;
             width: 100%;
-            max-width: 1400px;
-            margin: 0 auto;
+            margin: 0;
             align-items: stretch;
             justify-content: start;
-            padding: 0 20px;
+            padding: 0 15px;
             box-sizing: border-box;
             height: 100%;
-            overflow-x: auto;
+            min-width: 900px;
         }
 
         .column {
