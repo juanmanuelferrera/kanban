@@ -1144,12 +1144,63 @@
             }
 
             generateUserId() {
+                // Check URL for shared user ID first
+                const urlParams = new URLSearchParams(window.location.search);
+                const sharedUserId = urlParams.get('user');
+                
+                if (sharedUserId) {
+                    localStorage.setItem('kanbanUserId', sharedUserId);
+                    return sharedUserId;
+                }
+                
+                // Check localStorage
                 let userId = localStorage.getItem('kanbanUserId');
                 if (!userId) {
+                    // Generate new user ID
                     userId = 'user_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
                     localStorage.setItem('kanbanUserId', userId);
+                    
+                    // Show sharing info
+                    this.showSharingInfo(userId);
                 }
                 return userId;
+            }
+            
+            showSharingInfo(userId) {
+                const shareUrl = window.location.origin + window.location.pathname + '?user=' + userId;
+                console.log('🔗 Share this URL to sync across devices:', shareUrl);
+                
+                // Show notification with share URL
+                setTimeout(() => {
+                    const notification = document.createElement('div');
+                    notification.innerHTML = `
+                        🔗 <strong>Share URL:</strong><br>
+                        <input type="text" value="${shareUrl}" readonly style="width: 100%; margin-top: 5px; padding: 5px; font-size: 10px; border: 1px solid #ccc; border-radius: 4px;" onclick="this.select()">
+                        <br><small>Copy this URL to sync the same data on other devices</small>
+                    `;
+                    notification.style.cssText = `
+                        position: fixed;
+                        top: 70px;
+                        right: 20px;
+                        background: #3b82f6;
+                        color: white;
+                        padding: 15px;
+                        border-radius: 8px;
+                        font-size: 12px;
+                        z-index: 10000;
+                        max-width: 300px;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    `;
+                    
+                    document.body.appendChild(notification);
+                    
+                    // Auto-hide after 10 seconds
+                    setTimeout(() => {
+                        if (notification.parentNode) {
+                            notification.parentNode.removeChild(notification);
+                        }
+                    }, 10000);
+                }, 2000);
             }
 
             initializeOfflineSupport() {
