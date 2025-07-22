@@ -5153,6 +5153,29 @@
         // Initialize the application with password protection
         console.log('🚀 Starting app initialization...');
         
+        // Check authentication state
+        console.log('🔐 Checking authentication state...');
+        const userAuthState = userAuth.isValidSession();
+        console.log('📊 User auth state:', userAuthState);
+        
+        // Check if password manager has a session (simple check)
+        const legacySessionExists = localStorage.getItem('kanbanSession');
+        console.log('📊 Legacy session exists:', legacySessionExists ? 'yes' : 'no');
+        
+        if (userAuthState) {
+            console.log('✅ Valid user session found, unlocking app');
+            document.getElementById('passwordOverlay').style.display = 'none';
+            document.getElementById('appContent').style.display = 'flex';
+        } else if (legacySessionExists) {
+            console.log('✅ Valid legacy session found, unlocking app');
+            document.getElementById('passwordOverlay').style.display = 'none';
+            document.getElementById('appContent').style.display = 'flex';
+        } else {
+            console.log('❌ No valid session, showing login form');
+            document.getElementById('passwordOverlay').style.display = 'flex';
+            document.getElementById('appContent').style.display = 'none';
+        }
+        
         // Check for workspace in URL
         const urlParams = new URLSearchParams(window.location.search);
         const workspaceFromUrl = urlParams.get('workspace');
