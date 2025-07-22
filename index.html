@@ -1331,11 +1331,8 @@
             
             <div style="margin-bottom: 20px;">
                 <h3>Create New Workspace</h3>
-                <input type="text" id="newWorkspaceName" placeholder="Workspace name (e.g., Team Alpha)" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px;">
-                <label style="display: flex; align-items: center; gap: 8px; margin: 10px 0;">
-                    <input type="checkbox" id="isPrivateWorkspace">
-                    Private workspace (only you can access)
-                </label>
+                <input type="text" id="newWorkspaceName" placeholder="Workspace name (e.g., Team Alpha, My Projects, Travel Plans)" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px;">
+                <div style="font-size: 12px; color: #666; margin-bottom: 10px;">💡 Tip: Use descriptive names like "Work Projects", "Family Tasks", or "Travel Planning" for smart emoji detection</div>
                 <button onclick="createWorkspace()" style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Create Workspace</button>
             </div>
             
@@ -3830,7 +3827,7 @@
                     'personal': {
                         id: 'personal',
                         name: '📁 Main Workspace',
-                        type: 'private',
+                        type: 'main',
                         owner: storage.userId,
                         created: new Date().toISOString()
                     }
@@ -3920,10 +3917,7 @@
                     actionsDiv.appendChild(deleteBtn);
                 }
                 
-                const infoSpan = document.createElement('span');
-                infoSpan.textContent = `${workspace.type === 'private' ? '🔒' : '👥'} ${workspace.type}`;
-                infoSpan.style.cssText = 'font-size: 10px; color: #6b7280; margin-right: 8px;';
-                actionsDiv.appendChild(infoSpan);
+                // Remove type indicator since we no longer distinguish workspace types
                 
                 workspaceDiv.appendChild(nameSpan);
                 workspaceDiv.appendChild(actionsDiv);
@@ -3938,29 +3932,93 @@
         function closeWorkspaceModal() {
             document.getElementById('workspaceModal').style.display = 'none';
             document.getElementById('newWorkspaceName').value = '';
-            document.getElementById('isPrivateWorkspace').checked = false;
+        }
+
+        // Function to dynamically assign emoji based on workspace name
+        function getWorkspaceEmoji(name) {
+            const lowerName = name.toLowerCase();
+            
+            // Work/Business related
+            if (lowerName.includes('work') || lowerName.includes('office') || lowerName.includes('business') || lowerName.includes('company')) return '💼';
+            if (lowerName.includes('team') || lowerName.includes('group') || lowerName.includes('squad')) return '👥';
+            if (lowerName.includes('project') || lowerName.includes('task') || lowerName.includes('plan')) return '📋';
+            if (lowerName.includes('meeting') || lowerName.includes('agenda')) return '🗓️';
+            
+            // Personal/Family
+            if (lowerName.includes('personal') || lowerName.includes('private') || lowerName.includes('my')) return '👤';
+            if (lowerName.includes('family') || lowerName.includes('home') || lowerName.includes('house')) return '🏠';
+            if (lowerName.includes('kids') || lowerName.includes('children') || lowerName.includes('baby')) return '👶';
+            
+            // Creative/Hobbies
+            if (lowerName.includes('art') || lowerName.includes('design') || lowerName.includes('creative')) return '🎨';
+            if (lowerName.includes('music') || lowerName.includes('song') || lowerName.includes('band')) return '🎵';
+            if (lowerName.includes('photo') || lowerName.includes('picture') || lowerName.includes('camera')) return '📸';
+            if (lowerName.includes('book') || lowerName.includes('read') || lowerName.includes('library')) return '📚';
+            if (lowerName.includes('game') || lowerName.includes('gaming') || lowerName.includes('play')) return '🎮';
+            
+            // Health/Fitness
+            if (lowerName.includes('health') || lowerName.includes('fitness') || lowerName.includes('gym') || lowerName.includes('workout')) return '💪';
+            if (lowerName.includes('diet') || lowerName.includes('food') || lowerName.includes('recipe') || lowerName.includes('cooking')) return '🍳';
+            if (lowerName.includes('doctor') || lowerName.includes('medical') || lowerName.includes('hospital')) return '🏥';
+            
+            // Education/Learning
+            if (lowerName.includes('school') || lowerName.includes('university') || lowerName.includes('college') || lowerName.includes('study')) return '🎓';
+            if (lowerName.includes('learn') || lowerName.includes('course') || lowerName.includes('lesson') || lowerName.includes('tutorial')) return '📖';
+            
+            // Travel/Adventure
+            if (lowerName.includes('travel') || lowerName.includes('trip') || lowerName.includes('vacation') || lowerName.includes('holiday')) return '✈️';
+            if (lowerName.includes('adventure') || lowerName.includes('explore') || lowerName.includes('journey')) return '🗺️';
+            if (lowerName.includes('car') || lowerName.includes('drive') || lowerName.includes('road')) return '🚗';
+            
+            // Technology
+            if (lowerName.includes('tech') || lowerName.includes('code') || lowerName.includes('dev') || lowerName.includes('software')) return '💻';
+            if (lowerName.includes('app') || lowerName.includes('mobile') || lowerName.includes('website')) return '📱';
+            if (lowerName.includes('data') || lowerName.includes('database') || lowerName.includes('server')) return '🔧';
+            
+            // Finance/Money
+            if (lowerName.includes('money') || lowerName.includes('budget') || lowerName.includes('finance') || lowerName.includes('bank')) return '💰';
+            if (lowerName.includes('investment') || lowerName.includes('stock') || lowerName.includes('trading')) return '📈';
+            if (lowerName.includes('shopping') || lowerName.includes('buy') || lowerName.includes('purchase')) return '🛒';
+            
+            // Nature/Garden
+            if (lowerName.includes('garden') || lowerName.includes('plant') || lowerName.includes('flower') || lowerName.includes('green')) return '🌱';
+            if (lowerName.includes('nature') || lowerName.includes('forest') || lowerName.includes('tree')) return '🌳';
+            if (lowerName.includes('beach') || lowerName.includes('ocean') || lowerName.includes('sea')) return '🏖️';
+            
+            // Special occasions
+            if (lowerName.includes('birthday') || lowerName.includes('party') || lowerName.includes('celebration')) return '🎉';
+            if (lowerName.includes('wedding') || lowerName.includes('marriage')) return '💍';
+            if (lowerName.includes('christmas') || lowerName.includes('holiday')) return '🎄';
+            
+            // Default emojis by first letter
+            const firstLetter = name.charAt(0).toLowerCase();
+            const letterEmojis = {
+                'a': '🅰️', 'b': '🅱️', 'c': '🌙', 'd': '💎', 'e': '⚡', 'f': '🔥', 'g': '🎯', 'h': '❤️', 'i': '💡',
+                'j': '🎪', 'k': '🔑', 'l': '💝', 'm': '⭐', 'n': '🎵', 'o': '🌟', 'p': '🎯', 'q': '👑', 'r': '🌈',
+                's': '✨', 't': '🌍', 'u': '🦄', 'v': '✅', 'w': '🌊', 'x': '❌', 'y': '💛', 'z': '⚡'
+            };
+            
+            return letterEmojis[firstLetter] || '📁';
         }
 
         async function createWorkspace() {
             const name = document.getElementById('newWorkspaceName').value.trim();
-            const isPrivate = document.getElementById('isPrivateWorkspace').checked;
             
             if (!name) {
                 alert('Por favor ingresa un nombre para el workspace');
                 return;
             }
             
-            console.log('🏗️ Creating new workspace:', name, isPrivate ? '(Private)' : '(Shared)');
+            console.log('🏗️ Creating new workspace:', name);
             
             try {
-                const workspaceId = isPrivate ? 
-                    `private_${storage.userId}_${Date.now()}` : 
-                    `shared_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                const workspaceId = `workspace_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                const emoji = getWorkspaceEmoji(name);
                 
                 const workspace = {
                     id: workspaceId,
-                    name: `${isPrivate ? '🔒' : '👥'} ${name}`,
-                    type: isPrivate ? 'private' : 'shared',
+                    name: `${emoji} ${name}`,
+                    type: 'workspace',
                     owner: storage.userId,
                     created: new Date().toISOString()
                 };
