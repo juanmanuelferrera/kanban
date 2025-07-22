@@ -1426,9 +1426,10 @@
                 <h3>Create New Workspace</h3>
                 <input type="text" id="newWorkspaceName" placeholder="Workspace name (e.g., Team Alpha, My Projects, Travel Plans)" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px;">
                 <div style="font-size: 12px; color: #666; margin-bottom: 10px;">💡 Tip: Use descriptive names like "Work Boards", "Family Tasks", or "Travel Planning" for smart emoji detection</div>
-                <div style="display: flex; gap: 10px;">
+                <div style="display: flex; gap: 10px; flex-wrap: wrap;">
                     <button onclick="createWorkspace()" style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Create Workspace</button>
                     <button onclick="showWorkspaceShareUrl()" style="background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">🔗 Share Sync URL</button>
+                    <button onclick="debugWorkspaceData()" style="background: #f59e0b; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">🔍 Debug Data</button>
                 </div>
             </div>
             
@@ -4825,10 +4826,51 @@
             
             console.log('🔗 Share this URL to sync workspaces across devices:', shareUrl);
         }
+        
+        // Debug function to show workspace data structure
+        function debugWorkspaceData() {
+            console.log('🔍 DEBUG: Current userWorkspaces:', userWorkspaces);
+            console.log('🔍 DEBUG: localStorage userWorkspaces:', localStorage.getItem('userWorkspaces'));
+            
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                <strong>Debug Workspace Data:</strong><br>
+                <pre style="font-size: 10px; overflow-x: auto; max-width: 350px;">${JSON.stringify(userWorkspaces, null, 2)}</pre>
+            `;
+            notification.style.cssText = `
+                position: fixed;
+                top: 10px;
+                left: 10px;
+                background: #1f2937;
+                color: white;
+                padding: 15px;
+                border-radius: 8px;
+                z-index: 1000;
+                max-width: 400px;
+                font-size: 12px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                border: 1px solid #374151;
+                max-height: 400px;
+                overflow-y: auto;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 15 seconds or on click
+            const removeNotification = () => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            };
+            setTimeout(removeNotification, 15000);
+            notification.addEventListener('click', removeNotification);
+        }
 
         // Save workspaces with Firebase sync (similar to task data)
         async function saveWorkspaces() {
             try {
+                console.log('💾 saveWorkspaces called with data:', userWorkspaces);
+                
                 // Save to localStorage
                 localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
                 
@@ -4836,16 +4878,21 @@
                 const userId = getWorkspaceUserId();
                 
                 if (userId && window.database) {
-                    const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${userId}`);
-                    await window.firebaseSet(userWorkspacesRef, {
+                    const dataToSave = {
                         workspaces: userWorkspaces,
                         lastUpdate: new Date().toISOString()
-                    });
+                    };
+                    console.log('💾 Saving to Firebase path userWorkspaces/' + userId + ':', dataToSave);
+                    
+                    const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${userId}`);
+                    await window.firebaseSet(userWorkspacesRef, dataToSave);
                     storage.lastWorkspacesSaveTime = Date.now(); // Track save time to prevent merge race conditions
-                    console.log('💾 Workspaces saved to Firebase for userId:', userId);
+                    console.log('✅ Workspaces saved to Firebase for userId:', userId);
+                } else {
+                    console.warn('⚠️ Cannot save to Firebase - missing userId or database:', { userId, database: !!window.database });
                 }
             } catch (error) {
-                console.error('Failed to save workspaces:', error);
+                console.error('❌ Failed to save workspaces:', error);
             }
         }
 
@@ -4864,9 +4911,16 @@
                 
                 if (snapshot.exists()) {
                     const firebaseData = snapshot.val();
-                    const remoteWorkspaces = firebaseData.workspaces || {};
+                    console.log('📡 Raw Firebase data received:', firebaseData);
                     
-                    console.log('📡 Loaded workspaces from Firebase:', Object.keys(remoteWorkspaces));
+                    const remoteWorkspaces = firebaseData.workspaces || {};
+                    console.log('📡 Extracted remote workspaces:', remoteWorkspaces);
+                    console.log('📡 Remote workspace keys:', Object.keys(remoteWorkspaces));
+                    
+                    // Debug each workspace
+                    Object.keys(remoteWorkspaces).forEach(key => {
+                        console.log(`📡 Remote workspace ${key}:`, remoteWorkspaces[key]);
+                    });
                     
                     // Skip merge if we just saved to prevent race conditions
                     const now = Date.now();
@@ -4924,7 +4978,14 @@
                     const remoteWorkspaces = firebaseData.workspaces || {};
                     
                     console.log('📡 Received real-time workspaces update from Firebase');
-                    console.log('🔍 Remote workspaces:', Object.keys(remoteWorkspaces));
+                    console.log('📡 Raw real-time Firebase data:', firebaseData);
+                    console.log('🔍 Extracted real-time remote workspaces:', remoteWorkspaces);
+                    console.log('🔍 Remote workspace keys:', Object.keys(remoteWorkspaces));
+                    
+                    // Debug each workspace in real-time update
+                    Object.keys(remoteWorkspaces).forEach(key => {
+                        console.log(`🔍 Real-time workspace ${key}:`, remoteWorkspaces[key]);
+                    });
                     
                     // Skip merge if we just saved to prevent race conditions (only for very recent saves)
                     const now = Date.now();
@@ -4987,8 +5048,17 @@
         function initializeWorkspaces() {
             // Load user's workspaces from localStorage
             const savedWorkspaces = localStorage.getItem('userWorkspaces');
+            console.log('🔧 initializeWorkspaces - raw localStorage data:', savedWorkspaces);
+            
             if (savedWorkspaces) {
-                userWorkspaces = JSON.parse(savedWorkspaces);
+                try {
+                    userWorkspaces = JSON.parse(savedWorkspaces);
+                    console.log('🔧 initializeWorkspaces - parsed userWorkspaces:', userWorkspaces);
+                    console.log('🔧 initializeWorkspaces - workspace keys:', Object.keys(userWorkspaces));
+                } catch (error) {
+                    console.error('🔧 Failed to parse saved workspaces:', error);
+                    userWorkspaces = {};
+                }
             } else {
                 // Create default personal workspace
                 userWorkspaces = {
