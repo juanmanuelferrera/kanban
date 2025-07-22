@@ -1329,9 +1329,11 @@
             </div>
             
             <div style="margin-bottom: 20px; border-top: 1px solid #eee; padding-top: 20px;">
-                <h3>Join Existing Workspace</h3>
-                <input type="text" id="workspaceId" placeholder="Workspace ID or invite link" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px;">
-                <button onclick="joinWorkspace()" style="background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Join Workspace</button>
+                <h3>Manage Existing Workspaces</h3>
+                <div id="workspaceListContainer" style="margin: 10px 0;">
+                    <!-- Workspace list will be populated here -->
+                </div>
+                <button onclick="refreshWorkspaceList()" style="background: #6b7280; color: white; padding: 8px 16px; border: none; border-radius: 6px; cursor: pointer; font-size: 12px;">🔄 Refresh List</button>
             </div>
             
             <button onclick="closeWorkspaceModal()" style="background: #6b7280; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; float: right;">Close</button>
@@ -2462,12 +2464,19 @@
             // Load user data from Firebase
             await loadUserData(userHash);
             
+            // Initialize workspaces AFTER user authentication
+            console.log('🗂️ Initializing workspaces for user:', email);
+            initializeWorkspaces();
+            
             // Hide password overlay and show app
             document.getElementById('passwordOverlay').style.display = 'none';
             document.getElementById('appContent').style.display = 'flex';
             
             // Update UI with user info
             updateUserInterface(email);
+            
+            // Render workspace dropdown
+            renderWorkspaceDropdown();
             
             // Render projects and initialize app
             renderProjects();
@@ -2614,6 +2623,12 @@
         function unlockApp() {
             document.getElementById('passwordOverlay').style.display = 'none';
             document.getElementById('appContent').classList.add('unlocked');
+            
+            // Initialize workspaces for legacy users
+            console.log('🗂️ Initializing workspaces for legacy user');
+            initializeWorkspaces();
+            renderWorkspaceDropdown();
+            
             loadData(); // Load the application data
         }
 
@@ -3835,114 +3850,238 @@
 
         function showWorkspaceModal() {
             document.getElementById('workspaceModal').style.display = 'flex';
+            refreshWorkspaceList();
+        }
+        
+        function refreshWorkspaceList() {
+            const container = document.getElementById('workspaceListContainer');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            Object.keys(userWorkspaces).forEach(workspaceId => {
+                const workspace = userWorkspaces[workspaceId];
+                const isCurrentWorkspace = workspaceId === currentWorkspace;
+                const canDelete = workspaceId !== 'personal' && workspace.owner === storage.userId;
+                
+                const workspaceDiv = document.createElement('div');
+                workspaceDiv.style.cssText = `
+                    display: flex; 
+                    justify-content: space-between; 
+                    align-items: center; 
+                    padding: 8px 12px; 
+                    margin: 5px 0; 
+                    background: ${isCurrentWorkspace ? '#e0f2fe' : '#f9fafb'}; 
+                    border: 1px solid ${isCurrentWorkspace ? '#0891b2' : '#e5e7eb'}; 
+                    border-radius: 6px;
+                `;
+                
+                const nameSpan = document.createElement('span');
+                nameSpan.textContent = `${workspace.name}${isCurrentWorkspace ? ' (Actual)' : ''}`;
+                nameSpan.style.cssText = `font-weight: ${isCurrentWorkspace ? 'bold' : 'normal'}; color: ${isCurrentWorkspace ? '#0891b2' : '#374151'};`;
+                
+                const actionsDiv = document.createElement('div');
+                actionsDiv.style.display = 'flex';
+                actionsDiv.style.gap = '8px';
+                
+                if (!isCurrentWorkspace) {
+                    const switchBtn = document.createElement('button');
+                    switchBtn.textContent = '📂 Abrir';
+                    switchBtn.style.cssText = 'background: #3b82f6; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;';
+                    switchBtn.onclick = () => {
+                        switchWorkspace({ target: { value: workspaceId } });
+                        closeWorkspaceModal();
+                    };
+                    actionsDiv.appendChild(switchBtn);
+                }
+                
+                if (canDelete) {
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = '🗑️ Eliminar';
+                    deleteBtn.style.cssText = 'background: #ef4444; color: white; padding: 4px 8px; border: none; border-radius: 4px; cursor: pointer; font-size: 11px;';
+                    deleteBtn.onclick = () => deleteWorkspace(workspaceId);
+                    actionsDiv.appendChild(deleteBtn);
+                }
+                
+                const infoSpan = document.createElement('span');
+                infoSpan.textContent = `${workspace.type === 'private' ? '🔒' : '👥'} ${workspace.type}`;
+                infoSpan.style.cssText = 'font-size: 10px; color: #6b7280; margin-right: 8px;';
+                actionsDiv.appendChild(infoSpan);
+                
+                workspaceDiv.appendChild(nameSpan);
+                workspaceDiv.appendChild(actionsDiv);
+                container.appendChild(workspaceDiv);
+            });
+            
+            if (Object.keys(userWorkspaces).length === 0) {
+                container.innerHTML = '<div style="text-align: center; color: #6b7280; padding: 20px;">No hay workspaces disponibles</div>';
+            }
         }
 
         function closeWorkspaceModal() {
             document.getElementById('workspaceModal').style.display = 'none';
             document.getElementById('newWorkspaceName').value = '';
-            document.getElementById('workspaceId').value = '';
             document.getElementById('isPrivateWorkspace').checked = false;
         }
 
-        function createWorkspace() {
+        async function createWorkspace() {
             const name = document.getElementById('newWorkspaceName').value.trim();
             const isPrivate = document.getElementById('isPrivateWorkspace').checked;
             
             if (!name) {
-                alert('Please enter a workspace name');
+                alert('Por favor ingresa un nombre para el workspace');
                 return;
             }
             
-            const workspaceId = isPrivate ? 
-                `private_${storage.userId}_${Date.now()}` : 
-                `shared_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            console.log('🏗️ Creating new workspace:', name, isPrivate ? '(Private)' : '(Shared)');
             
-            const workspace = {
-                id: workspaceId,
-                name: `${isPrivate ? '🔒' : '👥'} ${name}`,
-                type: isPrivate ? 'private' : 'shared',
-                owner: storage.userId,
-                created: new Date().toISOString()
-            };
-            
-            userWorkspaces[workspaceId] = workspace;
-            localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
-            
-            renderWorkspaceDropdown();
-            switchWorkspace({ target: { value: workspaceId } });
-            closeWorkspaceModal();
-            
-            if (!isPrivate) {
-                // Show sharing info for shared workspaces
-                const shareUrl = `${window.location.origin}${window.location.pathname}?workspace=${workspaceId}`;
-                alert(`Workspace created! Share this link with team members:\n\n${shareUrl}`);
+            try {
+                const workspaceId = isPrivate ? 
+                    `private_${storage.userId}_${Date.now()}` : 
+                    `shared_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                
+                const workspace = {
+                    id: workspaceId,
+                    name: `${isPrivate ? '🔒' : '👥'} ${name}`,
+                    type: isPrivate ? 'private' : 'shared',
+                    owner: storage.userId,
+                    created: new Date().toISOString()
+                };
+                
+                // Add to local workspaces
+                userWorkspaces[workspaceId] = workspace;
+                
+                // Save to localStorage
+                localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+                
+                // Save to user's Firebase workspace list
+                if (userAuth.getCurrentUser().isLoggedIn) {
+                    const userHash = userAuth.getCurrentUser().userHash;
+                    const userWorkspaceRef = window.firebaseRef(window.database, `userWorkspaces/${userHash}/workspaces/${workspaceId}`);
+                    await window.firebaseSet(userWorkspaceRef, workspace);
+                    console.log('💾 Workspace saved to Firebase');
+                }
+                
+                // Refresh dropdown and switch to new workspace
+                renderWorkspaceDropdown();
+                switchWorkspace({ target: { value: workspaceId } });
+                closeWorkspaceModal();
+                
+                console.log('✅ Workspace created successfully:', workspaceId);
+                
+            } catch (error) {
+                console.error('❌ Error creating workspace:', error);
+                alert('Error creando workspace. Intenta nuevamente.');
             }
         }
-
-        function joinWorkspace() {
-            const input = document.getElementById('workspaceId').value.trim();
-            if (!input) {
-                alert('Please enter a workspace ID or invite link');
+        
+        async function deleteWorkspace(workspaceId) {
+            if (!workspaceId || workspaceId === 'personal') {
+                alert('No puedes eliminar el workspace personal');
                 return;
             }
             
-            // Extract workspace ID from URL or use direct ID
-            let workspaceId = input;
-            if (input.includes('workspace=')) {
-                const urlParams = new URLSearchParams(input.split('?')[1]);
-                workspaceId = urlParams.get('workspace');
+            const workspace = userWorkspaces[workspaceId];
+            if (!workspace) {
+                alert('Workspace no encontrado');
+                return;
             }
             
-            // Create workspace entry for user
-            const workspace = {
-                id: workspaceId,
-                name: `👥 Shared Workspace`,
-                type: 'shared',
-                owner: 'shared',
-                joined: new Date().toISOString()
-            };
+            const confirmDelete = confirm(`¿Estás seguro de eliminar "${workspace.name}"?\n\nEsta acción no se puede deshacer y eliminará todos los proyectos del workspace.`);
+            if (!confirmDelete) return;
             
-            userWorkspaces[workspaceId] = workspace;
-            localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
-            
-            renderWorkspaceDropdown();
-            switchWorkspace({ target: { value: workspaceId } });
-            closeWorkspaceModal();
+            try {
+                console.log('🗑️ Deleting workspace:', workspaceId);
+                
+                // Remove from local storage
+                delete userWorkspaces[workspaceId];
+                localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+                
+                // Remove from Firebase
+                if (userAuth.getCurrentUser().isLoggedIn) {
+                    const userHash = userAuth.getCurrentUser().userHash;
+                    const userWorkspaceRef = window.firebaseRef(window.database, `userWorkspaces/${userHash}/workspaces/${workspaceId}`);
+                    await window.firebaseRemove(userWorkspaceRef);
+                    
+                    // Also remove workspace data
+                    const workspaceDataRef = window.firebaseRef(window.database, `workspaces/${workspaceId}`);
+                    await window.firebaseRemove(workspaceDataRef);
+                    console.log('🗑️ Workspace data removed from Firebase');
+                }
+                
+                // If currently in deleted workspace, switch to personal
+                if (currentWorkspace === workspaceId) {
+                    currentWorkspace = 'personal';
+                    switchWorkspace({ target: { value: 'personal' } });
+                }
+                
+                renderWorkspaceDropdown();
+                console.log('✅ Workspace deleted successfully');
+                
+            } catch (error) {
+                console.error('❌ Error deleting workspace:', error);
+                alert('Error eliminando workspace. Intenta nuevamente.');
+            }
         }
 
         async function switchWorkspace(event) {
             const newWorkspaceId = event.target.value;
-            if (newWorkspaceId === currentWorkspace) return;
+            console.log('🏢 Switching workspace from', currentWorkspace, 'to', newWorkspaceId);
             
-            // Save current workspace data
-            await saveData();
+            if (newWorkspaceId === currentWorkspace) {
+                console.log('🏢 Same workspace selected, no change needed');
+                return;
+            }
             
-            // Switch to new workspace
-            currentWorkspace = newWorkspaceId;
-            
-            // Update storage to use workspace-specific data
-            storage.workspaceId = currentWorkspace;
-            
-            // Clear current data
-            projects = { default: { todo: [], doing: [], done: [] } };
-            projectTrash = [];
-            
-            // Load new workspace data
-            await loadData();
-            
-            // Force UI refresh
-            renderProjects();
-            switchProject('default');
-            renderKanbanBoard();
-            
-            console.log(`🏢 Switched to workspace: ${userWorkspaces[currentWorkspace]?.name}`);
+            try {
+                // Save current workspace data
+                console.log('💾 Saving current workspace data...');
+                await saveData();
+                
+                // Switch to new workspace
+                currentWorkspace = newWorkspaceId;
+                
+                // Update storage to use workspace-specific data
+                storage.workspaceId = currentWorkspace;
+                
+                // Clear current data
+                console.log('🗑️ Clearing current data...');
+                projects = {};
+                currentProject = null;
+                projectTrash = [];
+                
+                // Load new workspace data
+                console.log('📥 Loading new workspace data...');
+                await loadData();
+                
+                // Force UI refresh
+                console.log('🔄 Refreshing UI...');
+                renderProjects();
+                
+                // Switch to first available project or create default
+                if (Object.keys(projects).length > 0) {
+                    const firstProject = Object.keys(projects)[0];
+                    switchProject(firstProject);
+                } else {
+                    // Create default project if workspace is empty
+                    createDefaultProject();
+                }
+                
+                console.log(`✅ Switched to workspace: ${userWorkspaces[currentWorkspace]?.name}`);
+                
+            } catch (error) {
+                console.error('❌ Error switching workspace:', error);
+                // Revert dropdown selection
+                document.getElementById('workspaceSelect').value = currentWorkspace;
+            }
         }
+
+        // Add event listener for workspace dropdown
+        document.getElementById('workspaceSelect').addEventListener('change', switchWorkspace);
+        console.log('🎯 Workspace dropdown event listener added');
 
         // Initialize the application with password protection
         console.log('🚀 Starting app initialization...');
-        
-        // Initialize workspaces first
-        initializeWorkspaces();
         
         // Check for workspace in URL
         const urlParams = new URLSearchParams(window.location.search);
