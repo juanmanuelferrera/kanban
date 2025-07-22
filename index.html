@@ -1004,13 +1004,13 @@
                 grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
                 gap: 6px;
                 min-height: auto;
-                max-height: 120px;
+                max-height: 180px;
                 overflow-y: auto;
             }
 
             .project-item {
-                font-size: 9px !important;
-                padding: 3px 5px;
+                font-size: 12px !important;
+                padding: 6px 8px;
                 margin-bottom: 0;
                 text-align: center;
             }
@@ -1082,12 +1082,12 @@
             .project-list {
                 grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
                 gap: 4px;
-                max-height: 80px;
+                max-height: 140px;
             }
 
             .project-item {
-                font-size: 8px !important;
-                padding: 2px 4px;
+                font-size: 11px !important;
+                padding: 5px 6px;
             }
 
             .task-count {
@@ -1530,8 +1530,8 @@
                         // Only update if the data is newer
                         const localTimestamp = localStorage.getItem('lastSyncTimestamp') || '0';
                         if (data.timestamp > localTimestamp) {
+                            const previousProject = currentProject;
                             projects = data.projects;
-                            currentProject = data.currentProject;
                             projectTrash = data.projectTrash || [];
                             
                             // Ensure all projects have proper structure
@@ -1539,9 +1539,9 @@
                                 projects[projectId] = ensureProjectStructure(projects[projectId]);
                             });
                             
-                            // Update UI
+                            // Update UI but keep current project active
                             renderProjects();
-                            renderTasks();
+                            renderKanbanBoard();
                             
                             localStorage.setItem('lastSyncTimestamp', data.timestamp);
                             console.log('Real-time update received from Firebase');

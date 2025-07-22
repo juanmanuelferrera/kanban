@@ -5,7 +5,8 @@
       "Bash(git init:*)",
       "Bash(git push:*)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "WebFetch(domain:juanmanuelferrera.github.io)"
     ],
     "deny": []
   }
