@@ -3857,9 +3857,6 @@
                 const option = document.createElement('option');
                 option.value = workspace.id;
                 option.textContent = workspace.name;
-                if (workspace.type === 'shared') {
-                    option.textContent += ' (Shared)';
-                }
                 dropdown.appendChild(option);
             });
             
@@ -3884,8 +3881,7 @@
                 // Allow deletion of non-personal workspaces (more permissive)
                 const canDelete = workspaceId !== 'personal' && (
                     !workspace.owner || // No owner set (legacy workspaces)
-                    workspace.owner === storage.userId || // User is owner
-                    workspace.owner === 'shared' // Shared workspace
+                    workspace.owner === storage.userId // User is owner
                 );
                 console.log('🔍 Workspace delete check:', workspaceId, 'canDelete:', canDelete, 'owner:', workspace.owner, 'userId:', storage.userId);
                 
@@ -4186,11 +4182,12 @@
             
             // Add workspace to user's list if not already there
             if (!userWorkspaces[workspaceFromUrl]) {
+                const emoji = getWorkspaceEmoji('Workspace');
                 userWorkspaces[workspaceFromUrl] = {
                     id: workspaceFromUrl,
-                    name: '👥 Shared Workspace',
-                    type: 'shared',
-                    owner: 'shared',
+                    name: `${emoji} Workspace`,
+                    type: 'workspace',
+                    owner: storage.userId,
                     joined: new Date().toISOString()
                 };
                 localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
