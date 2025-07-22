@@ -5072,15 +5072,7 @@
                 userWorkspaces[workspaceId] = workspace;
                 
                 // Save workspaces with Firebase sync
-                saveWorkspaces();
-                
-                // Save to user's Firebase workspace list
-                if (userAuth.getCurrentUser().isLoggedIn) {
-                    const userHash = userAuth.getCurrentUser().userHash;
-                    const userWorkspaceRef = window.firebaseRef(window.database, `userWorkspaces/${userHash}/workspaces/${workspaceId}`);
-                    await window.firebaseSet(userWorkspaceRef, workspace);
-                    console.log('💾 Workspace saved to Firebase');
-                }
+                await saveWorkspaces();
                 
                 // Refresh dropdown and switch to new workspace
                 renderWorkspaceDropdown();
@@ -5117,15 +5109,10 @@
                 
                 // Remove from local storage
                 delete userWorkspaces[workspaceId];
-                saveWorkspaces();
+                await saveWorkspaces();
                 
-                // Remove from Firebase
+                // Remove workspace data from Firebase
                 if (userAuth.getCurrentUser().isLoggedIn) {
-                    const userHash = userAuth.getCurrentUser().userHash;
-                    const userWorkspaceRef = window.firebaseRef(window.database, `userWorkspaces/${userHash}/workspaces/${workspaceId}`);
-                    await window.firebaseRemove(userWorkspaceRef);
-                    
-                    // Also remove workspace data
                     const workspaceDataRef = window.firebaseRef(window.database, `workspaces/${workspaceId}`);
                     await window.firebaseRemove(workspaceDataRef);
                     console.log('🗑️ Workspace data removed from Firebase');
