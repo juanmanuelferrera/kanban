@@ -2505,8 +2505,9 @@
             } else if (Object.keys(projects).length > 0) {
                 switchProject(Object.keys(projects)[0]);
             } else {
-                // Create default project for new users
-                createDefaultProject();
+                // Show create project message for empty workspace
+                const boardTitle = document.getElementById('boardTitle');
+                if (boardTitle) boardTitle.value = 'Please, create a Project...';
             }
         }
 
@@ -4201,14 +4202,16 @@
                 console.log('🔄 Refreshing UI...');
                 renderProjects();
                 
-                // Switch to first available project or create default
+                // Switch to first available project or handle empty workspace
                 if (Object.keys(projects).length > 0) {
                     const firstProject = Object.keys(projects)[0];
                     console.log('🎯 Switching to project:', firstProject);
                     switchProject(firstProject);
                 } else {
-                    console.log('📝 Creating default project for empty workspace');
-                    createDefaultProject();
+                    console.log('📝 Empty workspace - showing create project message');
+                    // Set appropriate message for empty workspace
+                    const boardTitle = document.getElementById('boardTitle');
+                    if (boardTitle) boardTitle.value = 'Please, create a Project...';
                 }
                 
                 console.log('✅ Workspace switch completed');
