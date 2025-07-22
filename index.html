@@ -3857,6 +3857,16 @@
                 localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
             }
             
+            // Migration: Update existing personal workspace name if it's still the old name
+            if (userWorkspaces['personal'] && 
+                (userWorkspaces['personal'].name === '📁 Personal Workspace' || 
+                 userWorkspaces['personal'].name.includes('Personal Workspace'))) {
+                console.log('🔄 Migrating personal workspace name to Main Workspace');
+                userWorkspaces['personal'].name = '📁 Main Workspace';
+                userWorkspaces['personal'].type = 'main';
+                localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+            }
+            
             renderWorkspaceDropdown();
         }
 
