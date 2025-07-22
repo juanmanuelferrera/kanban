@@ -2050,21 +2050,21 @@
         const storage = new FirebaseStorageManager();
 
         // Define auth functions EARLY to ensure they're available for HTML onclick handlers
-        window.showLoginForm = function() {
+        function showLoginForm() {
             document.getElementById('userLoginForm').style.display = 'block';
             document.getElementById('userRegisterForm').style.display = 'none';
             document.getElementById('legacyLoginForm').style.display = 'none';
             document.getElementById('authFormDescription').textContent = 'Accede a tu cuenta personal';
-        };
+        }
 
-        window.showRegisterForm = function() {
+        function showRegisterForm() {
             document.getElementById('userLoginForm').style.display = 'none';
             document.getElementById('userRegisterForm').style.display = 'block';
             document.getElementById('legacyLoginForm').style.display = 'none';
             document.getElementById('authFormDescription').textContent = 'Crea tu cuenta personal';
-        };
+        }
 
-        window.showLegacyLogin = function() {
+        function showLegacyLogin() {
             console.log('🔄 Switching to legacy login mode...');
             document.getElementById('userLoginForm').style.display = 'none';
             document.getElementById('userRegisterForm').style.display = 'none';
@@ -2073,20 +2073,34 @@
             
             // Initialize legacy mode
             console.log('🚀 Calling initializeLegacyMode...');
-            if (window.initializeLegacyMode) {
-                window.initializeLegacyMode();
+            if (typeof initializeLegacyMode === 'function') {
+                initializeLegacyMode();
             } else {
                 console.error('❌ initializeLegacyMode not yet available');
-                setTimeout(() => window.initializeLegacyMode(), 100);
+                setTimeout(() => {
+                    if (typeof initializeLegacyMode === 'function') {
+                        initializeLegacyMode();
+                    }
+                }, 100);
             }
-        };
+        }
 
-        // Placeholder functions for async operations - will be replaced later
-        window.handleUserLogin = async function() { console.log('handleUserLogin called early'); };
-        window.handleUserRegister = async function() { console.log('handleUserRegister called early'); };
-        window.checkPassword = async function() { console.log('checkPassword called early'); };
-        window.setupPassword = async function() { console.log('setupPassword called early'); };
-        window.initializeLegacyMode = async function() { console.log('initializeLegacyMode called early - waiting for implementation'); };
+        // Make functions globally available
+        window.showLoginForm = showLoginForm;
+        window.showRegisterForm = showRegisterForm;
+        window.showLegacyLogin = showLegacyLogin;
+
+        // Placeholder functions for async operations - will be defined properly later
+        async function handleUserLogin() { console.log('handleUserLogin called early - will be replaced'); }
+        async function handleUserRegister() { console.log('handleUserRegister called early - will be replaced'); }
+        async function checkPassword() { console.log('checkPassword called early - will be replaced'); }
+        async function setupPassword() { console.log('setupPassword called early - will be replaced'); }
+        
+        // Make all functions globally available immediately
+        window.handleUserLogin = handleUserLogin;
+        window.handleUserRegister = handleUserRegister;
+        window.checkPassword = checkPassword;
+        window.setupPassword = setupPassword;
 
         console.log('✅ Early auth functions defined:', {
             showLoginForm: typeof window.showLoginForm,
@@ -2407,7 +2421,8 @@
 
         // Functions are assigned to window immediately after definition
 
-        window.handleUserLogin = async function() {
+        // Replace placeholder with real implementation
+        handleUserLogin = async function() {
             const email = document.getElementById('emailInput').value.trim();
             const password = document.getElementById('userPasswordInput').value;
             const errorDiv = document.getElementById('userLoginError');
@@ -2445,7 +2460,8 @@
             }
         };
 
-        window.handleUserRegister = async function() {
+        // Replace placeholder with real implementation  
+        handleUserRegister = async function() {
             const email = document.getElementById('registerEmail').value.trim();
             const password = document.getElementById('registerPassword').value;
             const confirmPassword = document.getElementById('registerConfirmPassword').value;
@@ -2633,7 +2649,8 @@
         }
 
         // Password UI Functions (Legacy System)
-        window.checkPassword = async function() {
+        // Replace placeholder with real implementation
+        checkPassword = async function() {
             console.log('🔐 Checking password...');
             const password = document.getElementById('passwordInput').value;
             const errorDiv = document.getElementById('passwordError');
@@ -2656,7 +2673,8 @@
             }
         };
 
-        window.setupPassword = async function() {
+        // Replace placeholder with real implementation  
+        setupPassword = async function() {
             console.log('📝 Setting up new password...');
             const newPassword = document.getElementById('newPasswordInput').value;
             const confirmPassword = document.getElementById('confirmPasswordInput').value;
@@ -2735,8 +2753,8 @@
             document.getElementById('emailInput').focus();
         }
 
-        // Replace early placeholder with real implementation
-        window.initializeLegacyMode = async function() {
+        // Define initializeLegacyMode function
+        async function initializeLegacyMode() {
             console.log('🔧 Initializing legacy mode...');
             
             try {
@@ -2763,7 +2781,8 @@
                 document.getElementById('setupForm').style.display = 'block';
                 document.getElementById('newPasswordInput').focus();
             }
-        };
+        }
+        window.initializeLegacyMode = initializeLegacyMode;
 
         // Handle Enter key in authentication inputs
         document.addEventListener('keydown', function(e) {
@@ -4242,11 +4261,11 @@
             if (currentProjectSpan) currentProjectSpan.textContent = 'No board';
             
             // Clear board title (text will be set appropriately after loading)
-            const boardTitle = document.getElementById('boardTitle');
-            if (boardTitle) {
-                console.log('🧹 Clearing board title, was:', boardTitle.value);
-                boardTitle.value = '';
-                console.log('🧹 Board title cleared to:', boardTitle.value);
+            const boardTitleEl = document.getElementById('boardTitle');
+            if (boardTitleEl) {
+                console.log('🧹 Clearing board title, was:', boardTitleEl.value);
+                boardTitleEl.value = '';
+                console.log('🧹 Board title cleared to:', boardTitleEl.value);
             }
             
             console.log('🧹 All tasks and UI elements cleared thoroughly');
@@ -4302,13 +4321,13 @@
                 } else {
                     console.log('📝 Empty workspace - showing create board message');
                     // Set appropriate message for empty workspace
-                    const boardTitle = document.getElementById('boardTitle');
-                    if (boardTitle) {
-                        boardTitle.value = 'Please, create a Board';
-                        boardTitle.disabled = true;
-                        boardTitle.style.cursor = 'default';
-                        boardTitle.style.backgroundColor = '#f9fafb';
-                        console.log('✅ Empty workspace - Board title set to:', boardTitle.value);
+                    const boardTitleEl2 = document.getElementById('boardTitle');
+                    if (boardTitleEl2) {
+                        boardTitleEl2.value = 'Please, create a Board';
+                        boardTitleEl2.disabled = true;
+                        boardTitleEl2.style.cursor = 'default';
+                        boardTitleEl2.style.backgroundColor = '#f9fafb';
+                        console.log('✅ Empty workspace - Board title set to:', boardTitleEl2.value);
                     }
                 }
                 
