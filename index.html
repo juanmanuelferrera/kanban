@@ -2159,83 +2159,129 @@
 
             async registerUser(email, password) {
                 try {
+                    console.log('📝 Registration attempt for:', email);
+                    
+                    // Validate Firebase is ready
+                    if (!window.database || !window.firebaseGet || !window.firebaseSet) {
+                        console.error('❌ Firebase not properly initialized');
+                        return { success: false, error: 'Sistema no disponible. Recarga la página.' };
+                    }
+
                     const emailHash = await this.hashEmail(email);
-                    const passwordHash = await this.hashPassword(password, email);
+                    console.log('📧 Email hash for registration:', emailHash.substring(0, 10) + '...');
                     
                     // Check if user already exists
-                    if (await this.userExists(emailHash)) {
+                    const exists = await this.userExists(emailHash);
+                    console.log('👤 User exists check:', exists);
+                    
+                    if (exists) {
+                        console.log('❌ User already exists');
                         return { success: false, error: 'Usuario ya existe' };
                     }
 
-                    // Create user in Firebase
-                    if (window.database) {
-                        const userRef = window.firebaseRef(window.database, `users/${emailHash}`);
-                        await window.firebaseSet(userRef, {
-                            email: email.toLowerCase().trim(),
-                            passwordHash: passwordHash,
-                            created: new Date().toISOString(),
-                            lastLogin: new Date().toISOString()
-                        });
+                    const passwordHash = await this.hashPassword(password, email);
+                    console.log('🔒 Password hash generated for registration');
 
-                        // Create user workspace
-                        const workspaceRef = window.firebaseRef(window.database, `userWorkspaces/${emailHash}`);
-                        await window.firebaseSet(workspaceRef, {
-                            projects: {},
-                            currentProject: null,
-                            settings: {},
-                            created: new Date().toISOString()
-                        });
-                    }
+                    console.log('🔥 Creating user in Firebase...');
+                    const userRef = window.firebaseRef(window.database, `users/${emailHash}`);
+                    await window.firebaseSet(userRef, {
+                        email: email.toLowerCase().trim(),
+                        passwordHash: passwordHash,
+                        created: new Date().toISOString(),
+                        lastLogin: new Date().toISOString()
+                    });
+                    console.log('👤 User created in Firebase');
 
+                    console.log('🗂️ Creating user workspace...');
+                    const workspaceRef = window.firebaseRef(window.database, `userWorkspaces/${emailHash}`);
+                    await window.firebaseSet(workspaceRef, {
+                        projects: {},
+                        currentProject: null,
+                        settings: {},
+                        created: new Date().toISOString()
+                    });
+                    console.log('🗂️ User workspace created');
+
+                    console.log('✅ Registration successful for:', email);
                     return { success: true, userHash: emailHash };
+                    
                 } catch (error) {
-                    console.error('Registration failed:', error);
-                    return { success: false, error: 'Error en registro' };
+                    console.error('💥 Registration exception:', error);
+                    return { success: false, error: `Error en registro: ${error.message}` };
                 }
             }
 
             async loginUser(email, password) {
                 try {
+                    console.log('🔐 Login attempt for:', email);
+                    
+                    // Validate Firebase is ready
+                    if (!window.database || !window.firebaseGet || !window.firebaseUpdate) {
+                        console.error('❌ Firebase not properly initialized');
+                        return { success: false, error: 'Sistema no disponible. Recarga la página.' };
+                    }
+
                     const emailHash = await this.hashEmail(email);
+                    console.log('📧 Email hash generated:', emailHash.substring(0, 10) + '...');
+                    
                     const passwordHash = await this.hashPassword(password, email);
+                    console.log('🔒 Password hash generated');
 
                     // Check user credentials
-                    if (window.database) {
-                        const userRef = window.firebaseRef(window.database, `users/${emailHash}`);
-                        const snapshot = await window.firebaseGet(userRef);
-                        
-                        if (!snapshot.exists()) {
-                            return { success: false, error: 'Usuario no encontrado' };
-                        }
+                    const userRef = window.firebaseRef(window.database, `users/${emailHash}`);
+                    console.log('🔍 Checking user in Firebase...');
+                    
+                    let snapshot;
+                    try {
+                        snapshot = await window.firebaseGet(userRef);
+                    } catch (firebaseError) {
+                        console.error('🔥 Firebase get error:', firebaseError);
+                        return { success: false, error: 'Error de conexión con la base de datos' };
+                    }
+                    
+                    if (!snapshot.exists()) {
+                        console.log('❌ User not found in Firebase');
+                        return { success: false, error: 'Usuario no encontrado' };
+                    }
 
-                        const userData = snapshot.val();
-                        if (userData.passwordHash !== passwordHash) {
-                            return { success: false, error: 'Contraseña incorrecta' };
-                        }
+                    const userData = snapshot.val();
+                    console.log('👤 User data found:', { email: userData.email, created: userData.created });
+                    
+                    if (userData.passwordHash !== passwordHash) {
+                        console.log('❌ Password mismatch');
+                        return { success: false, error: 'Contraseña incorrecta' };
+                    }
 
-                        // Update last login
+                    console.log('✅ Password verified, updating last login...');
+                    
+                    // Update last login (non-blocking)
+                    try {
                         await window.firebaseUpdate(userRef, {
                             lastLogin: new Date().toISOString()
                         });
-
-                        // Create session
-                        const session = {
-                            userHash: emailHash,
-                            email: userData.email,
-                            loginTime: Date.now(),
-                            expires: Date.now() + this.sessionDuration
-                        };
-
-                        localStorage.setItem(this.userKey, emailHash);
-                        sessionStorage.setItem(this.sessionKey, JSON.stringify(session));
-
-                        return { success: true, userHash: emailHash, email: userData.email };
+                        console.log('📅 Last login updated');
+                    } catch (updateError) {
+                        console.warn('⚠️ Could not update last login:', updateError);
+                        // Don't fail login if we can't update timestamp
                     }
 
-                    return { success: false, error: 'Conexión no disponible' };
+                    // Create session
+                    const session = {
+                        userHash: emailHash,
+                        email: userData.email,
+                        loginTime: Date.now(),
+                        expires: Date.now() + this.sessionDuration
+                    };
+
+                    localStorage.setItem(this.userKey, emailHash);
+                    sessionStorage.setItem(this.sessionKey, JSON.stringify(session));
+                    
+                    console.log('✅ Login successful for:', userData.email);
+                    return { success: true, userHash: emailHash, email: userData.email };
+
                 } catch (error) {
-                    console.error('Login failed:', error);
-                    return { success: false, error: 'Error en login' };
+                    console.error('💥 Login exception:', error);
+                    return { success: false, error: `Error en login: ${error.message}` };
                 }
             }
 
@@ -3919,15 +3965,19 @@
             }
         }
         
-        // Wait for Firebase to be ready, then initialize
-        setTimeout(() => {
-            console.log('🔥 Firebase ready, initializing password...');
-            initializePasswordProtection();
-        }, 1000);
+        // Wait for Firebase to be properly initialized
+        function waitForFirebase() {
+            if (window.database && window.firebaseGet && window.firebaseSet && window.firebaseUpdate) {
+                console.log('🔥 Firebase fully ready, initializing authentication...');
+                initializePasswordProtection();
+            } else {
+                console.log('⏳ Waiting for Firebase initialization...');
+                setTimeout(waitForFirebase, 500);
+            }
+        }
         
-        // Also call immediately in case Firebase is already ready
-        console.log('🔄 Calling immediate password init...');
-        initializePasswordProtection();
+        // Start checking for Firebase readiness
+        setTimeout(waitForFirebase, 100);
     </script>
 </body>
 </html>
