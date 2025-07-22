@@ -4930,24 +4930,34 @@
                     }
                     
                     // Merge remote workspaces with local ones
+                    let hasChanges = false;
                     Object.keys(remoteWorkspaces).forEach(workspaceId => {
+                        const remoteWorkspace = remoteWorkspaces[workspaceId];
+                        
+                        // Validate remote workspace has required properties
+                        if (!remoteWorkspace || !remoteWorkspace.id || !remoteWorkspace.name) {
+                            console.warn(`⚠️ Skipping invalid remote workspace: ${workspaceId}`, remoteWorkspace);
+                            return;
+                        }
+                        
                         if (!userWorkspaces[workspaceId]) {
-                            console.log(`➕ Adding remote workspace: ${workspaceId}`);
-                            userWorkspaces[workspaceId] = remoteWorkspaces[workspaceId];
+                            console.log(`➕ Adding remote workspace: ${workspaceId}`, remoteWorkspace);
+                            userWorkspaces[workspaceId] = remoteWorkspace;
+                            hasChanges = true;
                         } else {
-                            // Update existing workspace with any newer data
-                            userWorkspaces[workspaceId] = {
-                                ...userWorkspaces[workspaceId],
-                                ...remoteWorkspaces[workspaceId]
-                            };
+                            console.log(`🔄 Remote workspace exists locally, keeping local version: ${workspaceId}`);
+                            // Don't overwrite local workspaces to prevent data loss
                         }
                     });
                     
-                    // Save merged workspaces to localStorage
-                    localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
-                    renderWorkspaceDropdown();
-                    
-                    console.log('✅ Workspaces merged from Firebase');
+                    if (hasChanges) {
+                        // Save merged workspaces to localStorage
+                        localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+                        console.log('📱 Updated local userWorkspaces after Firebase merge:', userWorkspaces);
+                        renderWorkspaceDropdown();
+                        
+                        console.log('✅ Workspaces merged from Firebase');
+                    }
                 }
             } catch (error) {
                 console.error('Failed to load workspaces from Firebase:', error);
@@ -4999,6 +5009,12 @@
                     Object.keys(remoteWorkspaces).forEach(workspaceId => {
                         const remoteWorkspace = remoteWorkspaces[workspaceId];
                         const localWorkspace = userWorkspaces[workspaceId];
+                        
+                        // Validate remote workspace has required properties
+                        if (!remoteWorkspace || !remoteWorkspace.id || !remoteWorkspace.name) {
+                            console.warn(`⚠️ Skipping invalid real-time remote workspace: ${workspaceId}`, remoteWorkspace);
+                            return;
+                        }
                         
                         if (!localWorkspace) {
                             console.log(`➕ Adding new remote workspace: ${workspaceId}`, remoteWorkspace);
@@ -5052,23 +5068,43 @@
             
             if (savedWorkspaces) {
                 try {
-                    userWorkspaces = JSON.parse(savedWorkspaces);
-                    console.log('🔧 initializeWorkspaces - parsed userWorkspaces:', userWorkspaces);
-                    console.log('🔧 initializeWorkspaces - workspace keys:', Object.keys(userWorkspaces));
+                    const parsed = JSON.parse(savedWorkspaces);
+                    
+                    // Validate that parsed data is an object
+                    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+                        // Filter out any invalid workspace entries
+                        userWorkspaces = {};
+                        Object.keys(parsed).forEach(workspaceId => {
+                            const workspace = parsed[workspaceId];
+                            if (workspace && typeof workspace === 'object' && workspace.id && workspace.name) {
+                                userWorkspaces[workspaceId] = workspace;
+                                console.log('✅ Valid workspace loaded:', workspaceId, workspace.name);
+                            } else {
+                                console.warn('⚠️ Skipping invalid workspace from localStorage:', workspaceId, workspace);
+                            }
+                        });
+                        
+                        console.log('🔧 initializeWorkspaces - cleaned userWorkspaces:', userWorkspaces);
+                        console.log('🔧 initializeWorkspaces - valid workspace keys:', Object.keys(userWorkspaces));
+                    } else {
+                        console.warn('⚠️ Invalid localStorage workspace format, reinitializing');
+                        userWorkspaces = {};
+                    }
                 } catch (error) {
                     console.error('🔧 Failed to parse saved workspaces:', error);
                     userWorkspaces = {};
                 }
-            } else {
-                // Create default personal workspace
-                userWorkspaces = {
-                    'personal': {
-                        id: 'personal',
-                        name: '📁 Main Workspace',
-                        type: 'main',
-                        owner: storage.userId,
-                        created: new Date().toISOString()
-                    }
+            }
+            
+            // Ensure we always have at least the personal workspace
+            if (Object.keys(userWorkspaces).length === 0 || !userWorkspaces['personal']) {
+                console.log('🏗️ Creating/restoring personal workspace');
+                userWorkspaces['personal'] = {
+                    id: 'personal',
+                    name: '📁 Main Workspace',
+                    type: 'main',
+                    owner: storage.userId,
+                    created: new Date().toISOString()
                 };
                 saveWorkspaces(); // Use new save function
             }
