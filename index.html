@@ -1426,7 +1426,10 @@
                 <h3>Create New Workspace</h3>
                 <input type="text" id="newWorkspaceName" placeholder="Workspace name (e.g., Team Alpha, My Projects, Travel Plans)" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px;">
                 <div style="font-size: 12px; color: #666; margin-bottom: 10px;">💡 Tip: Use descriptive names like "Work Boards", "Family Tasks", or "Travel Planning" for smart emoji detection</div>
-                <button onclick="createWorkspace()" style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Create Workspace</button>
+                <div style="display: flex; gap: 10px;">
+                    <button onclick="createWorkspace()" style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Create Workspace</button>
+                    <button onclick="showWorkspaceShareUrl()" style="background: #3b82f6; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">🔗 Share Sync URL</button>
+                </div>
             </div>
             
             <div style="margin-bottom: 20px; border-top: 1px solid #eee; padding-top: 20px;">
@@ -4753,6 +4756,21 @@
                 return currentUser.userHash;
             }
             
+            // Check URL for shared user ID first (for cross-browser sync)
+            const urlParams = new URLSearchParams(window.location.search);
+            const sharedUserId = urlParams.get('user');
+            
+            if (sharedUserId) {
+                // Clean the user ID - remove extra "user_" prefix if present
+                const cleanUserId = sharedUserId.startsWith('user_user_') ? 
+                    sharedUserId.substring(5) : sharedUserId;
+                
+                // Save the shared user ID to localStorage for future use
+                localStorage.setItem('kanbanLegacyUserId', cleanUserId);
+                console.log('🔗 Using shared userId from URL for workspace sync:', cleanUserId);
+                return cleanUserId;
+            }
+            
             // For legacy users, create or get a consistent user ID
             let legacyUserId = localStorage.getItem('kanbanLegacyUserId');
             if (!legacyUserId) {
@@ -4768,6 +4786,44 @@
             }
             
             return legacyUserId;
+        }
+
+        // Show workspace sharing URL
+        function showWorkspaceShareUrl() {
+            const userId = getWorkspaceUserId();
+            const shareUrl = window.location.origin + window.location.pathname + '?user=' + encodeURIComponent(userId);
+            
+            const notification = document.createElement('div');
+            notification.innerHTML = `
+                🔗 <strong>Share Workspaces URL:</strong><br>
+                <input type="text" value="${shareUrl}" readonly style="width: 100%; margin-top: 5px; padding: 5px; font-size: 11px; border: 1px solid #ccc; border-radius: 4px;" onclick="this.select()">
+                <br><small>Use this URL to sync workspaces across devices/browsers</small>
+            `;
+            notification.style.cssText = `
+                position: fixed;
+                top: 70px;
+                right: 20px;
+                background: #1f2937;
+                color: white;
+                padding: 15px;
+                border-radius: 8px;
+                z-index: 1000;
+                max-width: 400px;
+                font-size: 12px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+                border: 1px solid #374151;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 10 seconds
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 10000);
+            
+            console.log('🔗 Share this URL to sync workspaces across devices:', shareUrl);
         }
 
         // Save workspaces with Firebase sync (similar to task data)
@@ -4870,9 +4926,9 @@
                     console.log('📡 Received real-time workspaces update from Firebase');
                     console.log('🔍 Remote workspaces:', Object.keys(remoteWorkspaces));
                     
-                    // Skip merge if we just saved to prevent race conditions
+                    // Skip merge if we just saved to prevent race conditions (only for very recent saves)
                     const now = Date.now();
-                    if (storage.lastWorkspacesSaveTime && (now - storage.lastWorkspacesSaveTime) < 2000) {
+                    if (storage.lastWorkspacesSaveTime && (now - storage.lastWorkspacesSaveTime) < 500) {
                         console.log('⏸️ Skipping workspaces merge - just saved data, preventing race condition');
                         return;
                     }
