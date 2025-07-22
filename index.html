@@ -1236,10 +1236,10 @@
         <h2>Ultra Kanban</h2>
         <div class="project-list" id="projectList">
             <div class="project-item active" data-project="default">
-                Default Project
+                Default Board
             </div>
         </div>
-        <button class="add-project" onclick="createProject()">+ Add Project</button>
+        <button class="add-project" onclick="createProject()">+ Add Board</button>
 
         <div class="trash-section" id="trashSection" style="display: none;">
             <h3 style="color: #6b7280; font-size: 12px; margin: 10px 0 5px 0; text-transform: uppercase;">Trash</h3>
@@ -1291,7 +1291,7 @@
             <div class="header-bottom" style="display: flex; justify-content: space-between; align-items: center;">
                 <input type="text" class="board-title" id="boardTitle" value="" placeholder="Enter board title...">
                 <div class="project-info">
-                    Project: <span id="currentProject">Default Project</span>
+                    Board: <span id="currentProject">Default Board</span>
                 </div>
             </div>
         </div>
@@ -1343,7 +1343,7 @@
             <div style="margin-bottom: 20px;">
                 <h3>Create New Workspace</h3>
                 <input type="text" id="newWorkspaceName" placeholder="Workspace name (e.g., Team Alpha, My Projects, Travel Plans)" style="width: 100%; padding: 10px; margin: 10px 0; border: 1px solid #ddd; border-radius: 6px;">
-                <div style="font-size: 12px; color: #666; margin-bottom: 10px;">💡 Tip: Use descriptive names like "Work Projects", "Family Tasks", or "Travel Planning" for smart emoji detection</div>
+                <div style="font-size: 12px; color: #666; margin-bottom: 10px;">💡 Tip: Use descriptive names like "Work Boards", "Family Tasks", or "Travel Planning" for smart emoji detection</div>
                 <button onclick="createWorkspace()" style="background: #10b981; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer;">Create Workspace</button>
             </div>
             
@@ -1372,10 +1372,10 @@
 
     <div class="modal" id="projectModal">
         <div class="modal-content">
-            <h3>Create New Project</h3>
-            <input type="text" id="projectInput" placeholder="Enter project name...">
+            <h3>Create New Board</h3>
+            <input type="text" id="projectInput" placeholder="Enter board name...">
             <div class="task-actions">
-                <button class="btn btn-primary" onclick="addProject()">Create Project</button>
+                <button class="btn btn-primary" onclick="addProject()">Create Board</button>
                 <button class="btn btn-secondary" onclick="closeProjectModal()">Cancel</button>
             </div>
         </div>
@@ -2505,11 +2505,14 @@
             } else if (Object.keys(projects).length > 0) {
                 switchProject(Object.keys(projects)[0]);
             } else {
-                // Show create project message for empty workspace
+                // Show create board message for empty workspace
                 console.log('🔧 Setting empty workspace message');
                 const boardTitle = document.getElementById('boardTitle');
                 if (boardTitle) {
-                    boardTitle.value = 'Please, create a Project...';
+                    boardTitle.value = 'Please, create a Board';
+                    boardTitle.disabled = true;
+                    boardTitle.style.cursor = 'default';
+                    boardTitle.style.backgroundColor = '#f9fafb';
                     console.log('✅ Board title set to:', boardTitle.value);
                 }
             }
@@ -2525,7 +2528,7 @@
                         const userData = snapshot.val();
                         projects = userData.projects || {};
                         currentProject = userData.currentProject;
-                        console.log(`📊 Loaded ${Object.keys(projects).length} projects for user`);
+                        console.log(`📊 Loaded ${Object.keys(projects).length} boards for user`);
                     } else {
                         // Initialize empty user workspace
                         projects = {};
@@ -2587,8 +2590,8 @@
         function createDefaultProject() {
             const projectId = 'project_' + Date.now();
             projects[projectId] = {
-                name: 'MI PRIMER PROYECTO',
-                title: 'Mi Primer Proyecto',
+                name: 'MI PRIMER BOARD',
+                title: 'Mi Primer Board',
                 tasks: {
                     todo: [],
                     doing: [],
@@ -3023,7 +3026,12 @@
         function switchProject(projectId) {
             currentProject = projectId;
             document.getElementById('currentProject').textContent = projects[projectId].name;
-            document.getElementById('boardTitle').value = projects[projectId].title;
+            
+            const boardTitle = document.getElementById('boardTitle');
+            boardTitle.value = projects[projectId].title;
+            boardTitle.disabled = false;
+            boardTitle.style.cursor = 'text';
+            boardTitle.style.backgroundColor = 'white';
 
             // Update active project in sidebar
             document.querySelectorAll('.project-item').forEach(item => {
@@ -3040,12 +3048,12 @@
         function renderTasks() {
             // Defensive check for valid project data
             if (!currentProject || !projects[currentProject] || !projects[currentProject].tasks) {
-                console.log('⚠️ No valid project data for rendering tasks');
+                console.log('⚠️ No valid board data for rendering tasks');
                 clearAllTasks();
                 return;
             }
             
-            console.log('🎨 Rendering tasks for project:', currentProject);
+            console.log('🎨 Rendering tasks for board:', currentProject);
             const columns = ['todo', 'doing', 'done'];
             columns.forEach(column => {
                 const taskList = document.getElementById(column + 'List');
@@ -3175,7 +3183,7 @@
 
         function deleteProject(projectId, event) {
             event.stopPropagation();
-            if (confirm('Move this project to trash? You can restore it later.')) {
+            if (confirm('Move this board to trash? You can restore it later.')) {
                 // Move project to trash
                 const trashedProject = {
                     ...projects[projectId],
@@ -3196,7 +3204,7 @@
                 saveData();
 
                 // Show success message
-                showNotification(`Project "${trashedProject.name}" moved to trash`, '#dc2626');
+                showNotification(`Board "${trashedProject.name}" moved to trash`, '#dc2626');
             }
         }
 
@@ -3221,7 +3229,7 @@
 
             // Show feedback
             const notification = document.createElement('div');
-            notification.textContent = `Project "${newProjectName}" created successfully!`;
+            notification.textContent = `Board "${newProjectName}" created successfully!`;
             notification.style.cssText = `
                 position: fixed;
                 top: 20px;
@@ -3398,26 +3406,26 @@
             if (trashVisible) renderTrash();
             saveData();
 
-            showNotification(`Project "${trashedProject.name}" restored successfully!`, '#10b981');
+            showNotification(`Board "${trashedProject.name}" restored successfully!`, '#10b981');
         }
 
         function permanentDelete(trashIndex) {
             const trashedProject = projectTrash[trashIndex];
             if (!trashedProject) return;
 
-            if (confirm(`Permanently delete "${trashedProject.name}"? This cannot be undone.`)) {
+            if (confirm(`Permanently delete "${trashedProject.name}" board? This cannot be undone.`)) {
                 projectTrash.splice(trashIndex, 1);
                 // Only render trash if currently visible
                 if (trashVisible) renderTrash();
                 saveData();
-                showNotification(`Project "${trashedProject.name}" permanently deleted`, '#dc2626');
+                showNotification(`Board "${trashedProject.name}" permanently deleted`, '#dc2626');
             }
         }
 
         function emptyTrash() {
             if (projectTrash.length === 0) return;
 
-            if (confirm(`Permanently delete all ${projectTrash.length} projects in trash? This cannot be undone.`)) {
+            if (confirm(`Permanently delete all ${projectTrash.length} boards in trash? This cannot be undone.`)) {
                 projectTrash = [];
                 // Only render trash if currently visible
                 if (trashVisible) renderTrash();
@@ -4158,7 +4166,7 @@
             
             // Clear project info
             const currentProjectSpan = document.getElementById('currentProject');
-            if (currentProjectSpan) currentProjectSpan.textContent = 'No project';
+            if (currentProjectSpan) currentProjectSpan.textContent = 'No board';
             
             // Clear board title (text will be set appropriately after loading)
             const boardTitle = document.getElementById('boardTitle');
@@ -4216,14 +4224,17 @@
                 // Switch to first available project or handle empty workspace
                 if (Object.keys(projects).length > 0) {
                     const firstProject = Object.keys(projects)[0];
-                    console.log('🎯 Switching to project:', firstProject);
+                    console.log('🎯 Switching to board:', firstProject);
                     switchProject(firstProject);
                 } else {
-                    console.log('📝 Empty workspace - showing create project message');
+                    console.log('📝 Empty workspace - showing create board message');
                     // Set appropriate message for empty workspace
                     const boardTitle = document.getElementById('boardTitle');
                     if (boardTitle) {
-                        boardTitle.value = 'Please, create a Project...';
+                        boardTitle.value = 'Please, create a Board';
+                        boardTitle.disabled = true;
+                        boardTitle.style.cursor = 'default';
+                        boardTitle.style.backgroundColor = '#f9fafb';
                         console.log('✅ Empty workspace - Board title set to:', boardTitle.value);
                     }
                 }
