@@ -117,6 +117,19 @@
         .project-item.drag-over {
             border-top: 3px solid #3b82f6;
         }
+        
+        .project-item.drop-target {
+            opacity: 0.7;
+            border: 2px dashed #10b981;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 4px;
+        }
+        
+        .project-item.drop-target.drop-hover {
+            background: rgba(16, 185, 129, 0.2);
+            border-color: #059669;
+            transform: scale(1.02);
+        }
 
         .project-item:hover {
             background: #f9fafb;
@@ -3627,14 +3640,24 @@
             e.preventDefault();
             e.dataTransfer.dropEffect = 'move';
 
-            // Remove existing drag-over classes
+            // Remove existing drag-over and drop-hover classes
             document.querySelectorAll('.project-item').forEach(item => {
-                item.classList.remove('drag-over');
+                item.classList.remove('drag-over', 'drop-hover');
             });
 
-            // Add drag-over class to current target
             const targetProject = e.target.closest('.project-item');
-            if (targetProject && targetProject.getAttribute('data-project') !== draggedProject) {
+            if (!targetProject) return;
+            
+            const targetProjectId = targetProject.getAttribute('data-project');
+            
+            // Handle task drops on projects (cross-board moves)
+            if (draggedTaskData && draggedTaskData.project && targetProjectId) {
+                if (draggedTaskData.project !== targetProjectId) {
+                    targetProject.classList.add('drop-hover');
+                }
+            }
+            // Handle project reordering
+            else if (draggedProject && targetProjectId && draggedProject !== targetProjectId) {
                 targetProject.classList.add('drag-over');
             }
         }
@@ -3648,7 +3671,15 @@
             
             const targetProjectId = targetElement.getAttribute('data-project');
 
-            if (draggedProject && targetProjectId && draggedProject !== targetProjectId) {
+            // Check if this is a task being dropped on a project (cross-board move)
+            if (draggedTaskData && draggedTaskData.project && targetProjectId) {
+                // Move task to different board
+                if (draggedTaskData.project !== targetProjectId) {
+                    moveTaskToProject(draggedTaskData, targetProjectId);
+                }
+            }
+            // Check if this is a project reordering
+            else if (draggedProject && targetProjectId && draggedProject !== targetProjectId) {
                 reorderProjects(draggedProject, targetProjectId);
                 renderProjects(); // Re-render to show new order
                 saveData(); // Save the new order
@@ -3656,7 +3687,7 @@
 
             // Clean up
             document.querySelectorAll('.project-item').forEach(item => {
-                item.classList.remove('drag-over');
+                item.classList.remove('drag-over', 'drop-hover');
             });
         }
 
@@ -3666,6 +3697,62 @@
                 item.classList.remove('drag-over');
             });
             draggedProject = null;
+        }
+
+        // Move task from one project to another
+        async function moveTaskToProject(taskData, targetProjectId) {
+            try {
+                console.log(`🔄 Moving task from "${taskData.project}" to "${targetProjectId}"`);
+                
+                // Ensure target project exists and has proper structure
+                if (!projects[targetProjectId]) {
+                    console.error('❌ Target project does not exist:', targetProjectId);
+                    return;
+                }
+                
+                // Ensure target project has proper task structure
+                ensureProjectStructure(projects[targetProjectId]);
+                
+                // Remove task from source project
+                const task = projects[taskData.project].tasks[taskData.column].splice(taskData.taskId, 1)[0];
+                
+                // Add task to target project's TODO column
+                projects[targetProjectId].tasks.todo.push(task);
+                
+                console.log(`✅ Task moved to ${targetProjectId}'s TODO column`);
+                
+                // Save data
+                await saveData();
+                
+                // Update UI
+                renderTasks();
+                renderProjects();
+                
+                // Show success notification
+                const notification = document.createElement('div');
+                const sourceProjectName = projects[taskData.project]?.name || 'Unknown';
+                const targetProjectName = projects[targetProjectId]?.name || 'Unknown';
+                notification.textContent = `✅ Task moved from "${sourceProjectName}" to "${targetProjectName}"`;
+                notification.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    right: 20px;
+                    background: #10b981;
+                    color: white;
+                    padding: 12px 20px;
+                    border-radius: 8px;
+                    z-index: 10000;
+                    font-size: 14px;
+                    max-width: 350px;
+                    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+                `;
+                document.body.appendChild(notification);
+                setTimeout(() => notification.remove(), 3000);
+                
+            } catch (error) {
+                console.error('❌ Error moving task between projects:', error);
+                alert('Error moving task. Please try again.');
+            }
         }
 
         function reorderProjects(draggedId, targetId) {
@@ -4729,6 +4816,7 @@
             draggedTaskData = {
                 taskId: taskId,
                 column: column,
+                project: currentProject,
                 content: projects[currentProject].tasks[column][taskId]
             };
 
@@ -4736,6 +4824,14 @@
 
             // Determine if this is reordering within the same column or moving between columns
             e.dataTransfer.effectAllowed = 'move';
+            
+            // Add visual feedback to project items for cross-board moves
+            document.querySelectorAll('.project-item').forEach(projectItem => {
+                const projectId = projectItem.getAttribute('data-project');
+                if (projectId !== currentProject) {
+                    projectItem.classList.add('drop-target');
+                }
+            });
         }
 
         function handleTaskDragEnd(e) {
@@ -4748,6 +4844,11 @@
 
             document.querySelectorAll('.task-list').forEach(list => {
                 list.classList.remove('drag-over-reorder');
+            });
+            
+            // Clear project drop targets
+            document.querySelectorAll('.project-item').forEach(projectItem => {
+                projectItem.classList.remove('drop-target', 'drop-hover');
             });
 
             draggedTask = null;
