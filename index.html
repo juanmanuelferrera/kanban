@@ -4780,7 +4780,7 @@
                 const userId = getWorkspaceUserId();
                 
                 if (userId && window.database) {
-                    const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${userId}/workspaces`);
+                    const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${userId}`);
                     await window.firebaseSet(userWorkspacesRef, {
                         workspaces: userWorkspaces,
                         lastUpdate: new Date().toISOString()
@@ -4803,7 +4803,7 @@
                 }
 
                 console.log('📡 Loading workspaces from Firebase for userId:', userId);
-                const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${userId}/workspaces`);
+                const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${userId}`);
                 const snapshot = await window.firebaseGet(userWorkspacesRef);
                 
                 if (snapshot.exists()) {
@@ -4860,7 +4860,7 @@
             }
 
             console.log('🎧 Setting up real-time listener for user workspaces, userId:', userId);
-            const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${userId}/workspaces`);
+            const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${userId}`);
             
             window.workspaceRealtimeUnsubscribe = window.firebaseOnValue(userWorkspacesRef, (snapshot) => {
                 if (snapshot.exists()) {
