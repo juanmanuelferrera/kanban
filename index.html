@@ -1736,6 +1736,18 @@
                                 doing: localTasks?.doing?.length || 0,
                                 done: localTasks?.done?.length || 0
                             });
+                            console.log('🔍 Local TODO tasks:', localTasks?.todo || []);
+                        }
+                        
+                        // Log remote project tasks
+                        if (currentProject && data.projects[currentProject]) {
+                            const remoteTasks = data.projects[currentProject].tasks;
+                            console.log('🔍 Remote tasks before merge:', {
+                                todo: remoteTasks?.todo?.length || 0,
+                                doing: remoteTasks?.doing?.length || 0,
+                                done: remoteTasks?.done?.length || 0
+                            });
+                            console.log('🔍 Remote TODO tasks:', remoteTasks?.todo || []);
                         }
                         
                         this.mergeRemoteChanges(data);
@@ -1748,6 +1760,7 @@
                                 doing: mergedTasks?.doing?.length || 0,
                                 done: mergedTasks?.done?.length || 0
                             });
+                            console.log('🔍 Final TODO tasks:', mergedTasks?.todo || []);
                         }
                         
                         // Show sync notification
@@ -1854,8 +1867,8 @@
                 
                 console.log('✅ Merge completed successfully');
                 
-                // Save merged result after a short delay
-                setTimeout(() => this.save(), 2000);
+                // Temporarily disable auto-save after merge to prevent race conditions
+                // setTimeout(() => this.save(), 2000);
             }
 
             mergeProjectTasks(localProject, remoteProject) {
@@ -3906,11 +3919,16 @@
         async function addTask() {
             const taskText = document.getElementById('taskInput').value.trim();
             if (taskText) {
+                console.log(`🆕 Adding task "${taskText}" to ${currentColumn} in ${currentProject}`);
+                
                 // 1. UPDATE: Modify the data array directly
                 projects[currentProject].tasks[currentColumn].push(taskText);
+                console.log(`📊 Task array now has ${projects[currentProject].tasks[currentColumn].length} items in ${currentColumn}`);
                 
                 // 2. SAVE: Use the save function
+                console.log('💾 Saving task to Firebase...');
                 await saveData();
+                console.log('✅ Task saved to Firebase');
                 
                 // 3. RENDER: Update the UI
                 renderTasks();
