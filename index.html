@@ -750,20 +750,18 @@
             justify-content: center;
         }
 
-        .task-image-indicator {
+        .task-image-mark {
+            position: absolute;
+            top: 4px;
+            left: 4px;
+            width: 8px;
+            height: 8px;
             background: #ef4444;
-            color: white;
-            border: none;
             border-radius: 50%;
-            width: 24px;
-            height: 24px;
-            font-size: 12px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: all 0.2s;
-            box-shadow: 0 1px 3px rgba(239, 68, 68, 0.3);
+            border: 2px solid white;
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+            pointer-events: none;
+            z-index: 1;
         }
 
         .task-item:hover .task-actions-container {
@@ -778,11 +776,6 @@
             background: #f0f9ff;
             color: #3b82f6;
             transform: scale(1.1);
-        }
-        .task-image-indicator:hover {
-            background: #dc2626;
-            transform: scale(1.1);
-            box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
         }
 
         .project-name {
@@ -820,7 +813,7 @@
             width: 100%;
         }
 
-        .project-context-menu {
+        .project-context-menu, .task-context-menu {
             position: fixed;
             background: #ffffff;
             border: 1px solid #d1d5db;
@@ -1395,6 +1388,22 @@
         </div>
         <div class="context-menu-item delete" onclick="permanentDeleteFromMenu()">
             <span>❌</span> Delete Permanently
+        </div>
+    </div>
+
+    <!-- Context Menu for Tasks -->
+    <div class="task-context-menu" id="taskContextMenu">
+        <div class="context-menu-item" onclick="attachImageFromMenu()" id="attachImageMenuItem">
+            <span>🖼️</span> Attach Image
+        </div>
+        <div class="context-menu-item" onclick="viewImageFromMenu()" id="viewImageMenuItem" style="display: none;">
+            <span>👁️</span> View Image
+        </div>
+        <div class="context-menu-item" onclick="downloadImageFromMenu()" id="downloadImageMenuItem" style="display: none;">
+            <span>📥</span> Download Image
+        </div>
+        <div class="context-menu-item" onclick="removeImageFromMenu()" id="removeImageMenuItem" style="display: none;">
+            <span>🗑️</span> Remove Image
         </div>
     </div>
 
@@ -3493,29 +3502,13 @@
                     const actionsContainer = document.createElement('div');
                     actionsContainer.className = 'task-actions-container';
                     
-                    // Add image indicator if task has image
+                    // Add subtle image indicator if task has image
                     if (hasImage) {
                         const imageIndicator = document.createElement('div');
-                        imageIndicator.className = 'task-image-indicator';
-                        imageIndicator.innerHTML = '🖼️';
-                        imageIndicator.title = 'This task has an image attachment - click to view/download';
-                        imageIndicator.onclick = (e) => {
-                            e.stopPropagation();
-                            showTaskImageModal(taskData.image, taskData.text || task);
-                        };
-                        actionsContainer.appendChild(imageIndicator);
+                        imageIndicator.className = 'task-image-mark';
+                        imageIndicator.title = 'This task has an image attachment - right-click task for image options';
+                        wrapperDiv.appendChild(imageIndicator);
                     }
-                    
-                    // Create attach image button
-                    const attachBtn = document.createElement('button');
-                    attachBtn.className = 'attach-image-task';
-                    attachBtn.innerHTML = '🖼️';
-                    attachBtn.title = 'Attach image';
-                    attachBtn.onclick = (e) => {
-                        e.stopPropagation();
-                        console.log('🖼️ Image attach button clicked for task:', column, index);
-                        attachImageToTask(column, index);
-                    };
                     
                     // Create delete button
                     const deleteBtn = document.createElement('button');
@@ -3523,7 +3516,6 @@
                     deleteBtn.textContent = '×';
                     deleteBtn.onclick = () => deleteTask(column, index);
                     
-                    actionsContainer.appendChild(attachBtn);
                     actionsContainer.appendChild(deleteBtn);
 
                     wrapperDiv.appendChild(taskContent);
@@ -3535,6 +3527,26 @@
                     taskDiv.addEventListener('dragend', handleTaskDragEnd);
                     taskDiv.addEventListener('dragover', handleTaskDragOver);
                     taskDiv.addEventListener('drop', handleTaskDrop);
+                    
+                    // Add right-click context menu for image functionality
+                    taskDiv.addEventListener('contextmenu', (e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        showTaskContextMenu(e, column, index);
+                    });
+                    
+                    // Add hover tooltip for right-click instructions
+                    let hoverTimeout;
+                    taskDiv.addEventListener('mouseenter', (e) => {
+                        hoverTimeout = setTimeout(() => {
+                            showRightClickTooltip(e, taskDiv);
+                        }, 1000); // Show after 1 second
+                    });
+                    
+                    taskDiv.addEventListener('mouseleave', () => {
+                        clearTimeout(hoverTimeout);
+                        hideRightClickTooltip();
+                    });
 
                     taskList.appendChild(taskDiv);
                 });
@@ -4058,6 +4070,128 @@
             } catch (error) {
                 console.error('❌ Error downloading image:', error);
                 alert('Error downloading image. Please try right-clicking the image and selecting "Save image as..."');
+            }
+        }
+
+        // Task context menu and image functions
+        let currentTaskContext = null;
+
+        function showTaskContextMenu(event, column, index) {
+            const contextMenu = document.getElementById('taskContextMenu');
+            const taskData = projects[currentProject].tasks[column][index];
+            const hasImage = typeof taskData === 'object' && taskData.image;
+            
+            // Store current task context
+            currentTaskContext = { column, index };
+            
+            // Show/hide menu items based on whether task has image
+            document.getElementById('attachImageMenuItem').style.display = 'block';
+            document.getElementById('viewImageMenuItem').style.display = hasImage ? 'block' : 'none';
+            document.getElementById('downloadImageMenuItem').style.display = hasImage ? 'block' : 'none';
+            document.getElementById('removeImageMenuItem').style.display = hasImage ? 'block' : 'none';
+            
+            // Position and show context menu
+            contextMenu.style.left = event.pageX + 'px';
+            contextMenu.style.top = event.pageY + 'px';
+            contextMenu.style.display = 'block';
+            
+            // Hide menu when clicking elsewhere
+            const hideMenu = (e) => {
+                if (!contextMenu.contains(e.target)) {
+                    contextMenu.style.display = 'none';
+                    document.removeEventListener('click', hideMenu);
+                }
+            };
+            setTimeout(() => document.addEventListener('click', hideMenu), 100);
+        }
+
+        function attachImageFromMenu() {
+            if (currentTaskContext) {
+                attachImageToTask(currentTaskContext.column, currentTaskContext.index);
+                document.getElementById('taskContextMenu').style.display = 'none';
+            }
+        }
+
+        function viewImageFromMenu() {
+            if (currentTaskContext) {
+                const taskData = projects[currentProject].tasks[currentTaskContext.column][currentTaskContext.index];
+                if (taskData.image) {
+                    showTaskImageModal(taskData.image, taskData.text || taskData);
+                }
+                document.getElementById('taskContextMenu').style.display = 'none';
+            }
+        }
+
+        function downloadImageFromMenu() {
+            if (currentTaskContext) {
+                const taskData = projects[currentProject].tasks[currentTaskContext.column][currentTaskContext.index];
+                if (taskData.image) {
+                    const fileName = (taskData.text ? taskData.text.substring(0, 30).replace(/[^a-z0-9]/gi, '_') : 'task_image') + '.png';
+                    downloadTaskImage(taskData.image, fileName);
+                }
+                document.getElementById('taskContextMenu').style.display = 'none';
+            }
+        }
+
+        function removeImageFromMenu() {
+            if (currentTaskContext) {
+                const taskData = projects[currentProject].tasks[currentTaskContext.column][currentTaskContext.index];
+                if (typeof taskData === 'object' && taskData.image) {
+                    // Convert back to string task
+                    projects[currentProject].tasks[currentTaskContext.column][currentTaskContext.index] = taskData.text || '';
+                    renderTasks();
+                    saveData();
+                    console.log('🗑️ Image removed from task');
+                }
+                document.getElementById('taskContextMenu').style.display = 'none';
+            }
+        }
+
+        // Tooltip functions
+        let currentTooltip = null;
+
+        function showRightClickTooltip(event, taskElement) {
+            // Don't show tooltip if task is being edited
+            if (taskElement.querySelector('[contenteditable="true"]')) {
+                return;
+            }
+            
+            const tooltip = document.createElement('div');
+            tooltip.className = 'right-click-tooltip';
+            tooltip.innerHTML = '💡 Right-click for image options';
+            tooltip.style.cssText = `
+                position: fixed;
+                background: #1f2937;
+                color: white;
+                padding: 8px 12px;
+                border-radius: 6px;
+                font-size: 12px;
+                z-index: 10000;
+                pointer-events: none;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+                white-space: nowrap;
+            `;
+            
+            // Position tooltip above the task
+            const rect = taskElement.getBoundingClientRect();
+            tooltip.style.left = (rect.left + rect.width / 2 - 80) + 'px'; // Center horizontally
+            tooltip.style.top = (rect.top - 35) + 'px'; // Above the task
+            
+            document.body.appendChild(tooltip);
+            currentTooltip = tooltip;
+            
+            // Auto-hide after 3 seconds
+            setTimeout(() => {
+                if (currentTooltip === tooltip) {
+                    hideRightClickTooltip();
+                }
+            }, 3000);
+        }
+
+        function hideRightClickTooltip() {
+            if (currentTooltip) {
+                currentTooltip.remove();
+                currentTooltip = null;
             }
         }
 
