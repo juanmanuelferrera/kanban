@@ -2046,6 +2046,29 @@
 
                 const now = new Date().toLocaleTimeString();
 
+                // Handle export/import operations
+                if (success.export || success.import) {
+                    if (success.export) {
+                        statusEl.textContent = `📤 Exported at ${now}`;
+                        statusEl.style.color = 'rgba(76, 175, 80, 0.8)';
+                    } else if (success.import) {
+                        statusEl.textContent = `📥 Imported at ${now}`;
+                        statusEl.style.color = 'rgba(76, 175, 80, 0.8)';
+                    }
+                    
+                    setTimeout(() => {
+                        if (this.isOnline) {
+                            statusEl.textContent = '☁️ Auto-syncing...';
+                        } else {
+                            statusEl.textContent = '💾 Offline mode...';
+                        }
+                        statusEl.style.color = 'rgba(255, 255, 255, 0.7)';
+                        statusEl.title = '';
+                    }, 3000);
+                    return;
+                }
+
+                // Handle save operations
                 if (success.firebase && success.localStorage) {
                     statusEl.textContent = `☁️ Synced at ${now}`;
                     statusEl.style.color = 'rgba(76, 175, 80, 0.8)';
@@ -2060,6 +2083,19 @@
                     statusEl.style.color = 'rgba(255, 193, 7, 0.8)';
                     statusEl.title = errors.firebase ? `Firebase error: ${errors.firebase}` : '';
                 } else {
+                    // Check if this is actually a save operation (has firebase/localStorage properties)
+                    const isSaveOperation = 'firebase' in success || 'localStorage' in success || 
+                                          Object.keys(errors).some(key => ['firebase', 'localStorage'].includes(key));
+                    
+                    // Also check if both success and errors are empty objects (common during export operations)
+                    const isEmptyCall = Object.keys(success).length === 0 && Object.keys(errors).length === 0;
+                    
+                    if (!isSaveOperation || isEmptyCall) {
+                        // Skip status update for non-save operations or empty calls
+                        console.log('⏭️ Skipping status update for non-save operation or empty call');
+                        return;
+                    }
+                    
                     // Both failed - show more detailed error
                     let errorMsg = `❌ Save failed at ${now}`;
                     let details = [];
@@ -2186,7 +2222,8 @@
                     URL.revokeObjectURL(url);
                     
                     console.log('✅ Multi-workspace export completed successfully');
-                    this.updateBackupStatus({ export: true, import: false });
+                    // Don't call updateBackupStatus for export operations to avoid confusion with save status
+                    // this.updateBackupStatus({ export: true, import: false });
                     
                 } catch (error) {
                     console.error('❌ Export failed:', error);
@@ -3415,7 +3452,8 @@
         function createBackup() {
             storage.createBackup().then(success => {
                 if (success) {
-                    storage.updateBackupStatus({ export: false, import: false });
+                    // Status is already updated by createBackup() function, no need to call again
+                    console.log('✅ Backup creation completed');
                 } else {
                     alert('Backup creation failed. Check console for details.');
                 }
