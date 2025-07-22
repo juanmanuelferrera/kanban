@@ -2481,6 +2481,15 @@
             initializeLegacyMode();
         }
 
+        // Ensure functions are available globally for onclick handlers
+        window.showLegacyLogin = showLegacyLogin;
+        window.showLoginForm = showLoginForm;
+        window.showRegisterForm = showRegisterForm;
+        window.handleUserLogin = handleUserLogin;
+        window.handleUserRegister = handleUserRegister;
+        window.checkPassword = checkPassword;
+        window.setupPassword = setupPassword;
+
         async function handleUserLogin() {
             const email = document.getElementById('emailInput').value.trim();
             const password = document.getElementById('userPasswordInput').value;
