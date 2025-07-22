@@ -5043,8 +5043,36 @@
 
         // Function to make URLs clickable
         function makeURLsClickable(text) {
-            const urlRegex = /(https?:\/\/[^\s]+)/g;
-            return text.replace(urlRegex, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+            if (!text) return text;
+            
+            let result = text;
+            
+            // Handle full URLs with protocol (http/https)
+            const httpRegex = /(https?:\/\/[^\s<>"]+[^\s<>".,:;!?)}\]])/gi;
+            result = result.replace(httpRegex, (url) => {
+                const cleanUrl = url.replace(/[.,:;!?)}\]]+$/, '');
+                return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${cleanUrl}</a>`;
+            });
+            
+            // Handle URLs without protocol (www.example.com or domain.com)
+            const wwwRegex = /(?<!href="|>)(www\.[^\s<>"]+[^\s<>".,:;!?)}\]])/gi;
+            result = result.replace(wwwRegex, (url) => {
+                const cleanUrl = url.replace(/[.,:;!?)}\]]+$/, '');
+                return `<a href="https://${cleanUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${cleanUrl}</a>`;
+            });
+            
+            // Handle plain domains (example.com, but be more selective to avoid false positives)
+            const domainRegex = /(?<!href="|>|www\.)([a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s<>"]*)?[^\s<>".,:;!?)}\]])/gi;
+            result = result.replace(domainRegex, (match, domain) => {
+                // Only convert if it looks like a valid domain
+                if (domain.includes('.') && !domain.match(/^\d+\.\d+/)) {
+                    const cleanDomain = domain.replace(/[.,:;!?)}\]]+$/, '');
+                    return `<a href="https://${cleanDomain}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${cleanDomain}</a>`;
+                }
+                return match;
+            });
+            
+            return result;
         }
 
         // Periodic refresh every 2 minutes (in case of multi-device usage)
