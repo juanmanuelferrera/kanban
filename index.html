@@ -2856,6 +2856,8 @@
             // Initialize workspaces AFTER user authentication
             console.log('🗂️ Initializing workspaces for user:', email);
             initializeWorkspaces();
+            await loadWorkspacesFromFirebase();
+            setupWorkspacesRealtimeListener();
             
             // Hide password overlay and show app
             document.getElementById('passwordOverlay').style.display = 'none';
@@ -4730,6 +4732,121 @@
         let userWorkspaces = {};
 
         // Initialize workspace system
+        // Save workspaces with Firebase sync (similar to task data)
+        async function saveWorkspaces() {
+            try {
+                // Save to localStorage
+                localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+                
+                // Save to Firebase if logged in and online
+                const currentUser = userAuth.getCurrentUser();
+                if (currentUser.isLoggedIn && window.database) {
+                    const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${currentUser.userHash}/workspaces`);
+                    await window.firebaseSet(userWorkspacesRef, {
+                        workspaces: userWorkspaces,
+                        lastUpdate: new Date().toISOString()
+                    });
+                    storage.lastWorkspacesSaveTime = Date.now(); // Track save time to prevent merge race conditions
+                    console.log('💾 Workspaces saved to Firebase');
+                }
+            } catch (error) {
+                console.error('Failed to save workspaces:', error);
+            }
+        }
+
+        async function loadWorkspacesFromFirebase() {
+            try {
+                const currentUser = userAuth.getCurrentUser();
+                if (!currentUser.isLoggedIn || !window.database) {
+                    console.log('📱 Loading workspaces from localStorage only');
+                    return;
+                }
+
+                const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${currentUser.userHash}/workspaces`);
+                const snapshot = await window.firebaseGet(userWorkspacesRef);
+                
+                if (snapshot.exists()) {
+                    const firebaseData = snapshot.val();
+                    const remoteWorkspaces = firebaseData.workspaces || {};
+                    
+                    console.log('📡 Loaded workspaces from Firebase:', Object.keys(remoteWorkspaces));
+                    
+                    // Skip merge if we just saved to prevent race conditions
+                    const now = Date.now();
+                    if (storage.lastWorkspacesSaveTime && (now - storage.lastWorkspacesSaveTime) < 2000) {
+                        console.log('⏸️ Skipping workspace merge - just saved data, preventing race condition');
+                        return;
+                    }
+                    
+                    // Merge remote workspaces with local ones
+                    Object.keys(remoteWorkspaces).forEach(workspaceId => {
+                        if (!userWorkspaces[workspaceId]) {
+                            console.log(`➕ Adding remote workspace: ${workspaceId}`);
+                            userWorkspaces[workspaceId] = remoteWorkspaces[workspaceId];
+                        } else {
+                            // Update existing workspace with any newer data
+                            userWorkspaces[workspaceId] = {
+                                ...userWorkspaces[workspaceId],
+                                ...remoteWorkspaces[workspaceId]
+                            };
+                        }
+                    });
+                    
+                    // Save merged workspaces to localStorage
+                    localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+                    renderWorkspaceDropdown();
+                    
+                    console.log('✅ Workspaces merged from Firebase');
+                }
+            } catch (error) {
+                console.error('Failed to load workspaces from Firebase:', error);
+            }
+        }
+
+        function setupWorkspacesRealtimeListener() {
+            const currentUser = userAuth.getCurrentUser();
+            if (!currentUser.isLoggedIn || !window.database) {
+                return;
+            }
+
+            console.log('🎧 Setting up real-time listener for user workspaces');
+            const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${currentUser.userHash}/workspaces`);
+            
+            window.firebaseOnValue(userWorkspacesRef, (snapshot) => {
+                if (snapshot.exists()) {
+                    const firebaseData = snapshot.val();
+                    const remoteWorkspaces = firebaseData.workspaces || {};
+                    
+                    console.log('📡 Received real-time workspaces update from Firebase');
+                    console.log('🔍 Remote workspaces:', Object.keys(remoteWorkspaces));
+                    
+                    // Skip merge if we just saved to prevent race conditions
+                    const now = Date.now();
+                    if (storage.lastWorkspacesSaveTime && (now - storage.lastWorkspacesSaveTime) < 2000) {
+                        console.log('⏸️ Skipping workspaces merge - just saved data, preventing race condition');
+                        return;
+                    }
+                    
+                    // Merge remote workspaces
+                    let hasChanges = false;
+                    Object.keys(remoteWorkspaces).forEach(workspaceId => {
+                        if (!userWorkspaces[workspaceId]) {
+                            console.log(`➕ Adding new remote workspace: ${workspaceId}`);
+                            userWorkspaces[workspaceId] = remoteWorkspaces[workspaceId];
+                            hasChanges = true;
+                        }
+                    });
+                    
+                    if (hasChanges) {
+                        // Save merged workspaces to localStorage only (don't save to Firebase to avoid loop)
+                        localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+                        renderWorkspaceDropdown();
+                        console.log('✅ Workspaces updated from real-time sync');
+                    }
+                }
+            });
+        }
+
         function initializeWorkspaces() {
             // Load user's workspaces from localStorage
             const savedWorkspaces = localStorage.getItem('userWorkspaces');
@@ -4746,7 +4863,7 @@
                         created: new Date().toISOString()
                     }
                 };
-                localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+                saveWorkspaces(); // Use new save function
             }
             
             // Migration: Update existing personal workspace name if it's still the old name
@@ -4756,7 +4873,7 @@
                 console.log('🔄 Migrating personal workspace name to Main Workspace');
                 userWorkspaces['personal'].name = '📁 Main Workspace';
                 userWorkspaces['personal'].type = 'main';
-                localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+                saveWorkspaces(); // Use new save function
             }
             
             renderWorkspaceDropdown();
@@ -4954,8 +5071,8 @@
                 // Add to local workspaces
                 userWorkspaces[workspaceId] = workspace;
                 
-                // Save to localStorage
-                localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+                // Save workspaces with Firebase sync
+                saveWorkspaces();
                 
                 // Save to user's Firebase workspace list
                 if (userAuth.getCurrentUser().isLoggedIn) {
@@ -5000,7 +5117,7 @@
                 
                 // Remove from local storage
                 delete userWorkspaces[workspaceId];
-                localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+                saveWorkspaces();
                 
                 // Remove from Firebase
                 if (userAuth.getCurrentUser().isLoggedIn) {
@@ -5195,7 +5312,7 @@
                     owner: storage.userId,
                     joined: new Date().toISOString()
                 };
-                localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+                saveWorkspaces();
                 renderWorkspaceDropdown();
             }
         }
