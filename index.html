@@ -4936,16 +4936,39 @@
                     // Merge remote workspaces
                     let hasChanges = false;
                     Object.keys(remoteWorkspaces).forEach(workspaceId => {
-                        if (!userWorkspaces[workspaceId]) {
-                            console.log(`➕ Adding new remote workspace: ${workspaceId}`);
-                            userWorkspaces[workspaceId] = remoteWorkspaces[workspaceId];
+                        const remoteWorkspace = remoteWorkspaces[workspaceId];
+                        const localWorkspace = userWorkspaces[workspaceId];
+                        
+                        if (!localWorkspace) {
+                            console.log(`➕ Adding new remote workspace: ${workspaceId}`, remoteWorkspace);
+                            userWorkspaces[workspaceId] = remoteWorkspace;
                             hasChanges = true;
+                        } else {
+                            // Update existing workspace with remote data if it's newer or has missing properties
+                            let needsUpdate = false;
+                            
+                            // Check if remote has properties that local is missing
+                            if (!localWorkspace.name && remoteWorkspace.name) {
+                                localWorkspace.name = remoteWorkspace.name;
+                                needsUpdate = true;
+                                console.log(`🔄 Updated workspace name: ${workspaceId} -> ${remoteWorkspace.name}`);
+                            }
+                            
+                            if (!localWorkspace.id && remoteWorkspace.id) {
+                                localWorkspace.id = remoteWorkspace.id;
+                                needsUpdate = true;
+                            }
+                            
+                            if (needsUpdate) {
+                                hasChanges = true;
+                            }
                         }
                     });
                     
                     if (hasChanges) {
                         // Save merged workspaces to localStorage only (don't save to Firebase to avoid loop)
                         localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
+                        console.log('🔍 Updated userWorkspaces after sync:', userWorkspaces);
                         renderWorkspaceDropdown();
                         console.log('✅ Workspaces updated from real-time sync');
                     }
@@ -4998,9 +5021,15 @@
             dropdown.innerHTML = '';
             
             Object.values(userWorkspaces).forEach(workspace => {
+                // Skip invalid workspaces
+                if (!workspace || typeof workspace !== 'object' || !workspace.id) {
+                    console.warn('⚠️ Skipping invalid workspace in dropdown:', workspace);
+                    return;
+                }
+                
                 const option = document.createElement('option');
                 option.value = workspace.id;
-                option.textContent = workspace.name;
+                option.textContent = workspace.name || workspace.id || 'Unnamed Workspace';
                 dropdown.appendChild(option);
             });
             
@@ -5021,6 +5050,22 @@
             
             Object.keys(userWorkspaces).forEach(workspaceId => {
                 const workspace = userWorkspaces[workspaceId];
+                
+                // Debug logging
+                console.log('🔍 Rendering workspace:', workspaceId, workspace);
+                
+                // Skip if workspace is invalid or missing required properties
+                if (!workspace || typeof workspace !== 'object') {
+                    console.warn('⚠️ Skipping invalid workspace:', workspaceId, workspace);
+                    return;
+                }
+                
+                // Skip if workspace has no name or id (corrupted data)
+                if (!workspace.name && !workspace.id) {
+                    console.warn('⚠️ Skipping workspace with no name or id:', workspaceId, workspace);
+                    return;
+                }
+                
                 const isCurrentWorkspace = workspaceId === currentWorkspace;
                 // Allow deletion of non-personal workspaces (more permissive)
                 const canDelete = workspaceId !== 'personal' && (
@@ -5042,7 +5087,8 @@
                 `;
                 
                 const nameSpan = document.createElement('span');
-                nameSpan.textContent = `${workspace.name}${isCurrentWorkspace ? ' (Actual)' : ''}`;
+                const workspaceName = workspace.name || workspace.id || 'Unnamed Workspace';
+                nameSpan.textContent = `${workspaceName}${isCurrentWorkspace ? ' (Actual)' : ''}`;
                 nameSpan.style.cssText = `font-weight: ${isCurrentWorkspace ? 'bold' : 'normal'}; color: ${isCurrentWorkspace ? '#0891b2' : '#374151'};`;
                 
                 const actionsDiv = document.createElement('div');
