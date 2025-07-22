@@ -1886,9 +1886,14 @@
                     console.log(`🔍 Processing remote task ${index}: ${remoteTaskText ? remoteTaskText.substring(0, 30) : 'unnamed task'}`);
                     
                     // Check if task already exists (compare text content)
-                    const exists = merged.some(localTask => {
+                    let existingTaskIndex = -1;
+                    const exists = merged.some((localTask, index) => {
                         const localTaskText = typeof localTask === 'string' ? localTask : localTask.text;
-                        return localTaskText === remoteTaskText;
+                        if (localTaskText === remoteTaskText) {
+                            existingTaskIndex = index;
+                            return true;
+                        }
+                        return false;
                     });
                     
                     if (!exists) {
@@ -1896,7 +1901,22 @@
                         const taskPreview = remoteTaskText ? remoteTaskText.substring(0, 30) : 'unnamed task';
                         console.log(`➕ Adding remote task: ${taskPreview}... (merged list now has ${merged.length} tasks)`);
                     } else {
-                        console.log(`⚠️ Task already exists, skipping: ${remoteTaskText ? remoteTaskText.substring(0, 30) : 'unnamed task'}...`);
+                        // Task exists - merge any additional properties (like images)
+                        const existingTask = merged[existingTaskIndex];
+                        const remoteTaskObj = typeof remoteTask === 'object' ? remoteTask : { text: remoteTask };
+                        const existingTaskObj = typeof existingTask === 'string' ? { text: existingTask } : existingTask;
+                        
+                        // Preserve image data from either source
+                        const mergedTaskObj = {
+                            text: existingTaskObj.text || remoteTaskObj.text,
+                            ...(existingTaskObj.image ? { image: existingTaskObj.image } : {}),
+                            ...(remoteTaskObj.image ? { image: remoteTaskObj.image } : {})
+                        };
+                        
+                        merged[existingTaskIndex] = mergedTaskObj;
+                        const taskPreview = remoteTaskText ? remoteTaskText.substring(0, 30) : 'unnamed task';
+                        const hasImage = mergedTaskObj.image ? ' (with image)' : '';
+                        console.log(`🔄 Updated existing task: ${taskPreview}...${hasImage}`);
                     }
                 });
                 
@@ -3968,7 +3988,7 @@
                             console.log('✅ Image attached to task successfully');
                             
                             // 2. SAVE: Use the save function
-                            saveData();
+                            await saveData();
                             
                             // 3. RENDER: Update the UI
                             renderTasks();
