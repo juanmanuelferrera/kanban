@@ -1699,16 +1699,11 @@
                         if (data.timestamp > localTimestamp) {
                             console.log('📡 Received real-time update from Firebase');
                             
-                            // Check if we have local unsaved changes
-                            const hasUnsavedChanges = this.hasUnsavedChanges();
-                            
-                            if (hasUnsavedChanges) {
-                                console.log('⚠️ Local changes detected - merging instead of overwriting');
-                                this.mergeRemoteChanges(data);
-                            } else {
-                                console.log('✅ No local changes - safe to update');
-                                this.applyRemoteData(data);
-                            }
+                            // Always merge remote changes to avoid data loss
+                            console.log('📡 Merging remote changes with local data');
+                            console.log('🔍 Local projects before merge:', Object.keys(projects));
+                            console.log('🔍 Remote projects to merge:', Object.keys(data.projects || {}));
+                            this.mergeRemoteChanges(data);
                             
                             localStorage.setItem('lastSyncTimestamp', data.timestamp);
                             
@@ -1773,6 +1768,8 @@
                     } else {
                         // Project exists locally - merge tasks
                         console.log(`🔄 Merging tasks for project: ${projectId}`);
+                        console.log(`🔍 Local tasks count: TODO=${localProjects[projectId].tasks?.todo?.length || 0}, DOING=${localProjects[projectId].tasks?.doing?.length || 0}, DONE=${localProjects[projectId].tasks?.done?.length || 0}`);
+                        console.log(`🔍 Remote tasks count: TODO=${remoteProjects[projectId].tasks?.todo?.length || 0}, DOING=${remoteProjects[projectId].tasks?.doing?.length || 0}, DONE=${remoteProjects[projectId].tasks?.done?.length || 0}`);
                         localProjects[projectId] = this.mergeProjectTasks(
                             localProjects[projectId], 
                             remoteProjects[projectId]
@@ -1834,9 +1831,21 @@
                 const merged = [...localTasks];
                 
                 remoteTasks.forEach(remoteTask => {
-                    if (!merged.includes(remoteTask)) {
+                    // Handle both string and object tasks for comparison
+                    const remoteTaskText = typeof remoteTask === 'string' ? remoteTask : remoteTask.text;
+                    
+                    // Check if task already exists (compare text content)
+                    const exists = merged.some(localTask => {
+                        const localTaskText = typeof localTask === 'string' ? localTask : localTask.text;
+                        return localTaskText === remoteTaskText;
+                    });
+                    
+                    if (!exists) {
                         merged.push(remoteTask);
-                        console.log(`➕ Adding remote task: ${remoteTask.substring(0, 30)}...`);
+                        const taskPreview = remoteTaskText ? remoteTaskText.substring(0, 30) : 'unnamed task';
+                        console.log(`➕ Adding remote task: ${taskPreview}...`);
+                    } else {
+                        console.log(`⚠️ Task already exists, skipping: ${remoteTaskText ? remoteTaskText.substring(0, 30) : 'unnamed task'}...`);
                     }
                 });
                 
