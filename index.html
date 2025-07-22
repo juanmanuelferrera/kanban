@@ -1289,7 +1289,7 @@
                 </div>
             </div>
             <div class="header-bottom" style="display: flex; justify-content: space-between; align-items: center;">
-                <input type="text" class="board-title" id="boardTitle" value="My Kanban Board" placeholder="Enter board title...">
+                <input type="text" class="board-title" id="boardTitle" value="" placeholder="Enter board title...">
                 <div class="project-info">
                     Project: <span id="currentProject">Default Project</span>
                 </div>
@@ -2506,8 +2506,12 @@
                 switchProject(Object.keys(projects)[0]);
             } else {
                 // Show create project message for empty workspace
+                console.log('🔧 Setting empty workspace message');
                 const boardTitle = document.getElementById('boardTitle');
-                if (boardTitle) boardTitle.value = 'Please, create a Project...';
+                if (boardTitle) {
+                    boardTitle.value = 'Please, create a Project...';
+                    console.log('✅ Board title set to:', boardTitle.value);
+                }
             }
         }
 
@@ -4131,6 +4135,12 @@
         }
 
         function clearAllTasks() {
+            // Debug: Check current board title before clearing
+            const boardTitle = document.getElementById('boardTitle');
+            if (boardTitle) {
+                console.log('🔍 Current board title before clearing:', boardTitle.value);
+            }
+            
             // Clear all task lists immediately and thoroughly
             const columns = ['todo', 'doing', 'done'];
             
@@ -4152,7 +4162,11 @@
             
             // Clear board title (text will be set appropriately after loading)
             const boardTitle = document.getElementById('boardTitle');
-            if (boardTitle) boardTitle.value = '';
+            if (boardTitle) {
+                console.log('🧹 Clearing board title, was:', boardTitle.value);
+                boardTitle.value = '';
+                console.log('🧹 Board title cleared to:', boardTitle.value);
+            }
             
             console.log('🧹 All tasks and UI elements cleared thoroughly');
         }
@@ -4208,7 +4222,10 @@
                     console.log('📝 Empty workspace - showing create project message');
                     // Set appropriate message for empty workspace
                     const boardTitle = document.getElementById('boardTitle');
-                    if (boardTitle) boardTitle.value = 'Please, create a Project...';
+                    if (boardTitle) {
+                        boardTitle.value = 'Please, create a Project...';
+                        console.log('✅ Empty workspace - Board title set to:', boardTitle.value);
+                    }
                 }
                 
                 console.log('✅ Workspace switch completed');
