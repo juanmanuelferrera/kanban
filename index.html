@@ -9,7 +9,7 @@
     <!-- Firebase SDK -->
     <script type="module">
         import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
-        import { getDatabase, ref, set, get, onValue, push, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
+        import { getDatabase, ref, set, get, update, onValue, push, remove } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-database.js';
         
         // Firebase configuration
         const firebaseConfig = {
@@ -28,6 +28,7 @@
         window.firebaseRef = ref;
         window.firebaseSet = set;
         window.firebaseGet = get;
+        window.firebaseUpdate = update;
         window.firebaseOnValue = onValue;
         window.firebasePush = push;
         window.firebaseRemove = remove;
@@ -2314,18 +2315,21 @@
 
             try {
                 errorDiv.style.display = 'none';
+                console.log('🔐 Starting login for:', email);
                 const result = await userAuth.loginUser(email, password);
+                console.log('🔐 Login result:', result);
                 
                 if (result.success) {
-                    console.log(`🔑 User logged in: ${result.email}`);
+                    console.log(`🔑 User logged in successfully: ${result.email}`);
                     await initializeUserSession(result.userHash, result.email);
                 } else {
+                    console.error('❌ Login failed:', result.error);
                     errorDiv.textContent = result.error;
                     errorDiv.style.display = 'block';
                 }
             } catch (error) {
-                console.error('Login error:', error);
-                errorDiv.textContent = 'Error al iniciar sesión';
+                console.error('💥 Login exception:', error);
+                errorDiv.textContent = 'Error al iniciar sesión: ' + error.message;
                 errorDiv.style.display = 'block';
             }
         }
@@ -2362,22 +2366,32 @@
 
             try {
                 errorDiv.style.display = 'none';
+                console.log('🚀 Starting user registration for:', email);
                 const result = await userAuth.registerUser(email, password);
+                console.log('📝 Registration result:', result);
                 
                 if (result.success) {
-                    console.log(`✨ User registered: ${email}`);
+                    console.log(`✨ User registered successfully: ${email}`);
                     // Auto-login after registration
+                    console.log('🔐 Auto-login after registration...');
                     const loginResult = await userAuth.loginUser(email, password);
+                    console.log('🔐 Auto-login result:', loginResult);
                     if (loginResult.success) {
+                        console.log('✅ Auto-login successful, initializing session...');
                         await initializeUserSession(loginResult.userHash, email);
+                    } else {
+                        console.error('❌ Auto-login failed:', loginResult.error);
+                        errorDiv.textContent = 'Registro exitoso pero falló el login automático. Intenta hacer login manualmente.';
+                        errorDiv.style.display = 'block';
                     }
                 } else {
+                    console.error('❌ Registration failed:', result.error);
                     errorDiv.textContent = result.error;
                     errorDiv.style.display = 'block';
                 }
             } catch (error) {
-                console.error('Registration error:', error);
-                errorDiv.textContent = 'Error al registrar usuario';
+                console.error('💥 Registration exception:', error);
+                errorDiv.textContent = 'Error al registrar usuario: ' + error.message;
                 errorDiv.style.display = 'block';
             }
         }
