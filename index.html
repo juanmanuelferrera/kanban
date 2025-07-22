@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+<!-- Version: 2025.07.22-sync-fix-v2 - Fixed renderKanbanBoard error -->
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -1785,9 +1786,9 @@
                     projects[projectId] = ensureProjectStructure(projects[projectId]);
                 });
                 
-                // Update UI but keep current project active
+                // Update UI but keep current project active - Fixed renderKanbanBoard error
                 renderProjects();
-                renderTasks();
+                renderTasks(); // Fixed: was renderKanbanBoard()
                 
                 console.log('✅ Applied remote data successfully');
             }
@@ -1847,9 +1848,9 @@
                 
                 projectTrash = mergedTrash;
                 
-                // Update UI
+                // Update UI - Fixed renderKanbanBoard error
                 renderProjects();
-                renderTasks();
+                renderTasks(); // Fixed: was renderKanbanBoard() 
                 
                 console.log('✅ Merge completed successfully');
                 
