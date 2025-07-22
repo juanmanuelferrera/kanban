@@ -3882,21 +3882,32 @@
             document.getElementById('taskInput').focus();
         }
 
-        function addTask() {
+        async function addTask() {
             const taskText = document.getElementById('taskInput').value.trim();
             if (taskText) {
+                // 1. UPDATE: Modify the data array directly
                 projects[currentProject].tasks[currentColumn].push(taskText);
+                
+                // 2. SAVE: Use the save function
+                await saveData();
+                
+                // 3. RENDER: Update the UI
                 renderTasks();
                 renderProjects(); // Update task counts
                 closeModal();
-                saveData();
             }
         }
 
-        function deleteTask(column, index) {
+        async function deleteTask(column, index) {
+            // 1. UPDATE: Modify the data array directly
             projects[currentProject].tasks[column].splice(index, 1);
+            
+            // 2. SAVE: Use the save function
+            await saveData();
+            
+            // 3. RENDER: Update the UI
             renderTasks();
-            saveData();
+            renderProjects(); // Update task counts
         }
 
         function closeModal() {
@@ -3950,12 +3961,16 @@
                                 projects[currentProject].tasks[column][index] = task;
                             }
                             
-                            // Add image to task
+                            // 1. UPDATE: Modify the data array directly
                             task.image = imageData;
                             
                             console.log('✅ Image attached to task successfully');
-                            renderTasks();
+                            
+                            // 2. SAVE: Use the save function
                             saveData();
+                            
+                            // 3. RENDER: Update the UI
+                            renderTasks();
                             
                             // Show success feedback
                             const notification = document.createElement('div');
@@ -4143,15 +4158,21 @@
             }
         }
 
-        function removeImageFromMenu() {
+        async function removeImageFromMenu() {
             if (currentTaskContext) {
                 const taskData = projects[currentProject].tasks[currentTaskContext.column][currentTaskContext.index];
                 if (typeof taskData === 'object' && taskData.image) {
-                    // Convert back to string task
+                    // 1. UPDATE: Modify the data array directly
                     projects[currentProject].tasks[currentTaskContext.column][currentTaskContext.index] = taskData.text || '';
-                    renderTasks();
-                    saveData();
+                    
                     console.log('🗑️ Image removed from task');
+                    
+                    // 2. SAVE: Use the save function
+                    await saveData();
+                    
+                    // 3. RENDER: Update the UI
+                    renderTasks();
+                    renderProjects();
                 }
                 document.getElementById('taskContextMenu').style.display = 'none';
             }
@@ -4296,9 +4317,10 @@
             element.setAttribute('data-original-value', element.textContent);
         }
 
-        function finishEditingTask(element, column, index) {
+        async function finishEditingTask(element, column, index) {
             const newText = element.textContent.trim();
             if (newText && newText !== '') {
+                // 1. UPDATE: Modify the data array directly
                 let currentTask = projects[currentProject].tasks[column][index];
                 if (typeof currentTask === 'object' && currentTask.text !== undefined) {
                     // Update object task
@@ -4307,8 +4329,12 @@
                     // Update simple string task
                     projects[currentProject].tasks[column][index] = newText;
                 }
+                
+                // 2. SAVE: Use the save function
+                await saveData();
+                
+                // 3. RENDER: Update the UI
                 element.innerHTML = makeURLsClickable(newText);
-                saveData();
             } else {
                 // Revert to original value if empty
                 element.textContent = element.getAttribute('data-original-value');
@@ -4482,6 +4508,7 @@
             if (sourceColumn === targetColumn) {
                 // Reordering within the same column
                 if (sourceIndex !== dropIndex && sourceIndex !== dropIndex - 1) {
+                    // 1. UPDATE: Modify the data array directly
                     const task = projects[currentProject].tasks[sourceColumn].splice(sourceIndex, 1)[0];
 
                     // Adjust drop index if we removed an item before it
@@ -4490,15 +4517,26 @@
                     }
 
                     projects[currentProject].tasks[targetColumn].splice(dropIndex, 0, task);
-                    renderTasks();
+                    
+                    // 2. SAVE: Use the save function
                     saveData();
+                    
+                    // 3. RENDER: Update the UI
+                    renderTasks();
+                    renderProjects();
                 }
             } else {
                 // Moving between columns
+                // 1. UPDATE: Modify the data array directly
                 const task = projects[currentProject].tasks[sourceColumn].splice(sourceIndex, 1)[0];
                 projects[currentProject].tasks[targetColumn].splice(dropIndex, 0, task);
-                renderTasks();
+                
+                // 2. SAVE: Use the save function
                 saveData();
+                
+                // 3. RENDER: Update the UI
+                renderTasks();
+                renderProjects();
             }
         }
 
