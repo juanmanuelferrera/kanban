@@ -3033,13 +3033,15 @@
             setupPassword: typeof window.setupPassword
         });
 
-        function unlockApp() {
+        async function unlockApp() {
             document.getElementById('passwordOverlay').style.display = 'none';
             document.getElementById('appContent').classList.add('unlocked');
             
             // Initialize workspaces for legacy users
             console.log('🗂️ Initializing workspaces for legacy user');
             initializeWorkspaces();
+            await loadWorkspacesFromFirebase();
+            setupWorkspacesRealtimeListener();
             renderWorkspaceDropdown();
             
             loadData(); // Load the application data
@@ -4732,22 +4734,47 @@
         let userWorkspaces = {};
 
         // Initialize workspace system
+        // Get consistent userId for workspace sync
+        function getWorkspaceUserId() {
+            const currentUser = userAuth.getCurrentUser();
+            if (currentUser.isLoggedIn) {
+                return currentUser.userHash;
+            }
+            
+            // For legacy users, create or get a consistent user ID
+            let legacyUserId = localStorage.getItem('kanbanLegacyUserId');
+            if (!legacyUserId) {
+                // Generate a consistent ID based on localStorage data or create new
+                legacyUserId = `legacy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                localStorage.setItem('kanbanLegacyUserId', legacyUserId);
+                console.log('🆔 Generated legacy userId for workspace sync:', legacyUserId);
+            }
+            
+            // Set storage.userId if not already set
+            if (!storage.userId) {
+                storage.userId = legacyUserId;
+            }
+            
+            return legacyUserId;
+        }
+
         // Save workspaces with Firebase sync (similar to task data)
         async function saveWorkspaces() {
             try {
                 // Save to localStorage
                 localStorage.setItem('userWorkspaces', JSON.stringify(userWorkspaces));
                 
-                // Save to Firebase if logged in and online
-                const currentUser = userAuth.getCurrentUser();
-                if (currentUser.isLoggedIn && window.database) {
-                    const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${currentUser.userHash}/workspaces`);
+                // Save to Firebase if we have database connection
+                const userId = getWorkspaceUserId();
+                
+                if (userId && window.database) {
+                    const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${userId}/workspaces`);
                     await window.firebaseSet(userWorkspacesRef, {
                         workspaces: userWorkspaces,
                         lastUpdate: new Date().toISOString()
                     });
                     storage.lastWorkspacesSaveTime = Date.now(); // Track save time to prevent merge race conditions
-                    console.log('💾 Workspaces saved to Firebase');
+                    console.log('💾 Workspaces saved to Firebase for userId:', userId);
                 }
             } catch (error) {
                 console.error('Failed to save workspaces:', error);
@@ -4756,13 +4783,15 @@
 
         async function loadWorkspacesFromFirebase() {
             try {
-                const currentUser = userAuth.getCurrentUser();
-                if (!currentUser.isLoggedIn || !window.database) {
+                const userId = getWorkspaceUserId();
+                
+                if (!userId || !window.database) {
                     console.log('📱 Loading workspaces from localStorage only');
                     return;
                 }
 
-                const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${currentUser.userHash}/workspaces`);
+                console.log('📡 Loading workspaces from Firebase for userId:', userId);
+                const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${userId}/workspaces`);
                 const snapshot = await window.firebaseGet(userWorkspacesRef);
                 
                 if (snapshot.exists()) {
@@ -4804,13 +4833,15 @@
         }
 
         function setupWorkspacesRealtimeListener() {
-            const currentUser = userAuth.getCurrentUser();
-            if (!currentUser.isLoggedIn || !window.database) {
+            const userId = getWorkspaceUserId();
+            
+            if (!userId || !window.database) {
+                console.log('⚠️ Cannot setup workspace listener - no userId or database');
                 return;
             }
 
-            console.log('🎧 Setting up real-time listener for user workspaces');
-            const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${currentUser.userHash}/workspaces`);
+            console.log('🎧 Setting up real-time listener for user workspaces, userId:', userId);
+            const userWorkspacesRef = window.firebaseRef(window.database, `userWorkspaces/${userId}/workspaces`);
             
             window.firebaseOnValue(userWorkspacesRef, (snapshot) => {
                 if (snapshot.exists()) {
