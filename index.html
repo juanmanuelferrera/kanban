@@ -3162,14 +3162,8 @@
         // Save data with enhanced persistence
         async function saveData() {
             try {
-                // Check if using new user system
-                const currentUser = userAuth.getCurrentUser();
-                if (currentUser.isLoggedIn) {
-                    await saveUserData(currentUser.userHash);
-                } else {
-                    // Fall back to legacy system
-                    await storage.save();
-                }
+                // Always use the workspace storage system for consistent data paths
+                await storage.save();
             } catch (error) {
                 console.error('Failed to save data:', error);
             }
