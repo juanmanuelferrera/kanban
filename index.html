@@ -2032,25 +2032,48 @@
 
             // Export data to JSON file
             exportData() {
-                const data = {
-                    version: '1.0.0',
-                    projects: projects,
-                    currentProject: currentProject,
-                    projectTrash: projectTrash || [],
-                    timestamp: new Date().toISOString()
-                };
-                
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `ultra-kanban-backup-${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
-                
-                this.updateBackupStatus({ export: true, import: false });
+                try {
+                    console.log('📤 Starting data export...');
+                    console.log('📤 Projects data:', projects);
+                    console.log('📤 Current project:', currentProject);
+                    console.log('📤 Project trash:', projectTrash);
+                    
+                    const data = {
+                        version: '1.0.0',
+                        projects: projects,
+                        currentProject: currentProject,
+                        projectTrash: projectTrash || [],
+                        timestamp: new Date().toISOString()
+                    };
+                    
+                    console.log('📤 Export data package:', data);
+                    
+                    const jsonString = JSON.stringify(data, null, 2);
+                    console.log('📤 JSON string length:', jsonString.length);
+                    
+                    const blob = new Blob([jsonString], { type: 'application/json' });
+                    console.log('📤 Blob created:', blob);
+                    
+                    const url = URL.createObjectURL(blob);
+                    console.log('📤 Object URL created:', url);
+                    
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `ultra-kanban-backup-${new Date().toISOString().split('T')[0]}.json`;
+                    console.log('📤 Download filename:', a.download);
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    
+                    console.log('✅ Export completed successfully');
+                    this.updateBackupStatus({ export: true, import: false });
+                    
+                } catch (error) {
+                    console.error('❌ Export failed:', error);
+                    alert('Export failed: ' + error.message);
+                }
             }
 
             // Import data from JSON file
@@ -2155,19 +2178,36 @@
 
             // Create timestamped data package
             createDataPackage() {
-                return {
-                    version: DATA_VERSION,
-                    timestamp: new Date().toISOString(),
-                    projects: structuredClone(projects),
-                    currentProject: currentProject,
-                    projectTrash: structuredClone(projectTrash),
-                    metadata: {
-                        totalProjects: Object.keys(projects).length,
-                        totalTasks: Object.values(projects).reduce((sum, p) =>
-                            sum + p.tasks.todo.length + p.tasks.doing.length + p.tasks.done.length, 0),
-                        trashedProjects: projectTrash.length
-                    }
-                };
+                try {
+                    console.log('📦 Creating data package for export...');
+                    
+                    // Use JSON parse/stringify for deep cloning (more compatible than structuredClone)
+                    const projectsClone = JSON.parse(JSON.stringify(projects || {}));
+                    const trashClone = JSON.parse(JSON.stringify(projectTrash || []));
+                    
+                    const dataPackage = {
+                        version: DATA_VERSION,
+                        timestamp: new Date().toISOString(),
+                        projects: projectsClone,
+                        currentProject: currentProject,
+                        projectTrash: trashClone,
+                        metadata: {
+                            totalProjects: Object.keys(projects || {}).length,
+                            totalTasks: Object.values(projects || {}).reduce((sum, p) => {
+                                if (!p || !p.tasks) return sum;
+                                return sum + (p.tasks.todo?.length || 0) + (p.tasks.doing?.length || 0) + (p.tasks.done?.length || 0);
+                            }, 0),
+                            trashedProjects: (projectTrash || []).length
+                        }
+                    };
+                    
+                    console.log('📦 Data package created successfully');
+                    return dataPackage;
+                    
+                } catch (error) {
+                    console.error('❌ Failed to create data package:', error);
+                    throw error;
+                }
             }
 
             // Save to multiple storage backends
@@ -2299,18 +2339,38 @@
 
             // Export data as JSON file
             exportData() {
-                const data = this.createDataPackage();
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `ultra-kanban-backup-${new Date().toISOString().split('T')[0]}.json`;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(url);
+                try {
+                    console.log('📤 StorageManager: Starting data export...');
+                    
+                    const data = this.createDataPackage();
+                    console.log('📤 StorageManager: Data package created:', data);
+                    
+                    const jsonString = JSON.stringify(data, null, 2);
+                    console.log('📤 StorageManager: JSON string length:', jsonString.length);
+                    
+                    const blob = new Blob([jsonString], { type: 'application/json' });
+                    console.log('📤 StorageManager: Blob created');
+                    
+                    const url = URL.createObjectURL(blob);
+                    console.log('📤 StorageManager: Object URL created');
+                    
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `ultra-kanban-backup-${new Date().toISOString().split('T')[0]}.json`;
+                    console.log('📤 StorageManager: Download filename:', a.download);
+                    
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
 
-                this.updateBackupStatus({ export: true });
+                    console.log('✅ StorageManager: Export completed successfully');
+                    this.updateBackupStatus({ export: true });
+                    
+                } catch (error) {
+                    console.error('❌ StorageManager: Export failed:', error);
+                    alert('Export failed: ' + error.message);
+                }
             }
 
             // Import data from JSON file
@@ -3202,7 +3262,25 @@
 
         // Global functions for UI
         function exportData() {
-            storage.exportData();
+            try {
+                console.log('🔍 Export function called');
+                console.log('🔍 Storage object:', storage);
+                console.log('🔍 Storage exportData method:', typeof storage.exportData);
+                
+                if (!storage || typeof storage.exportData !== 'function') {
+                    console.error('❌ Storage object or exportData method not available');
+                    alert('Export functionality not available. Please check console for details.');
+                    return;
+                }
+                
+                console.log('🔍 Calling storage.exportData()');
+                storage.exportData();
+                console.log('✅ Export completed successfully');
+                
+            } catch (error) {
+                console.error('❌ Export failed:', error);
+                alert('Export failed: ' + error.message);
+            }
         }
 
         function createBackup() {
