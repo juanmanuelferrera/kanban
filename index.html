@@ -224,9 +224,17 @@
             outline: none;
         }
 
-        .board-title:hover,
-        .board-title:focus {
+        .board-title:hover:not(:disabled),
+        .board-title:focus:not(:disabled) {
             border-bottom-color: rgba(31, 41, 55, 0.5);
+        }
+
+        .board-title:disabled {
+            background-color: #f9fafb !important;
+            color: #6b7280 !important;
+            cursor: default !important;
+            border-bottom-color: #e5e7eb !important;
+            opacity: 1 !important; /* Override default disabled opacity */
         }
 
         .project-info {
@@ -2557,8 +2565,8 @@
                 if (boardTitle) {
                     boardTitle.value = 'Please, create a Board';
                     boardTitle.disabled = true;
-                    boardTitle.style.cursor = 'default';
-                    boardTitle.style.backgroundColor = '#f9fafb';
+                    boardTitle.style.color = '#6b7280';
+                    boardTitle.style.fontStyle = 'italic';
                     console.log('✅ Board title set to:', boardTitle.value);
                 }
             }
@@ -3122,8 +3130,8 @@
             const boardTitle = document.getElementById('boardTitle');
             boardTitle.value = projects[projectId].title;
             boardTitle.disabled = false;
-            boardTitle.style.cursor = 'text';
-            boardTitle.style.backgroundColor = 'white';
+            boardTitle.style.color = '#1f2937'; // Reset to normal color
+            boardTitle.style.fontStyle = 'normal'; // Reset italic
 
             // Update active project in sidebar
             document.querySelectorAll('.project-item').forEach(item => {
@@ -4265,7 +4273,10 @@
             if (boardTitleEl) {
                 console.log('🧹 Clearing board title, was:', boardTitleEl.value);
                 boardTitleEl.value = '';
-                console.log('🧹 Board title cleared to:', boardTitleEl.value);
+                boardTitleEl.disabled = false; // Reset disabled state
+                boardTitleEl.style.color = '#1f2937'; // Reset color
+                boardTitleEl.style.fontStyle = 'normal'; // Reset italic
+                console.log('🧹 Board title cleared and reset');
             }
             
             console.log('🧹 All tasks and UI elements cleared thoroughly');
@@ -4325,8 +4336,8 @@
                     if (boardTitleEl2) {
                         boardTitleEl2.value = 'Please, create a Board';
                         boardTitleEl2.disabled = true;
-                        boardTitleEl2.style.cursor = 'default';
-                        boardTitleEl2.style.backgroundColor = '#f9fafb';
+                        boardTitleEl2.style.color = '#6b7280';
+                        boardTitleEl2.style.fontStyle = 'italic';
                         console.log('✅ Empty workspace - Board title set to:', boardTitleEl2.value);
                     }
                 }
