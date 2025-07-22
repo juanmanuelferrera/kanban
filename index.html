@@ -2352,6 +2352,107 @@
             }
         }
 
+        // Legacy Password Manager (Simple Password Mode)
+        class PasswordManager {
+            constructor() {
+                this.userId = 'kanban_legacy_user';
+                this.passwordKey = 'kanbanPassword';
+                this.sessionKey = 'kanbanSession';
+                this.sessionDuration = 7 * 24 * 60 * 60 * 1000; // 7 days
+            }
+
+            async hashPassword(password) {
+                const encoder = new TextEncoder();
+                const data = encoder.encode(password + 'kanban_salt');
+                const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+                const hashArray = Array.from(new Uint8Array(hashBuffer));
+                return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+            }
+
+            async setPassword(password) {
+                const hashedPassword = await this.hashPassword(password);
+                localStorage.setItem(this.passwordKey, hashedPassword);
+                
+                // Also save to Firebase if available
+                if (window.database) {
+                    try {
+                        const passwordRef = window.firebaseRef(window.database, `legacyPasswords/${this.userId}`);
+                        await window.firebaseSet(passwordRef, {
+                            hash: hashedPassword,
+                            created: new Date().toISOString()
+                        });
+                        console.log('🔐 Legacy password saved to Firebase');
+                    } catch (error) {
+                        console.error('Failed to save legacy password to Firebase:', error);
+                    }
+                }
+            }
+
+            async checkPassword(password) {
+                const hashedPassword = await this.hashPassword(password);
+                
+                // Check Firebase first (for cross-device sync)
+                if (window.database) {
+                    try {
+                        const passwordRef = window.firebaseRef(window.database, `legacyPasswords/${this.userId}`);
+                        const snapshot = await window.firebaseGet(passwordRef);
+                        if (snapshot.exists()) {
+                            const data = snapshot.val();
+                            return data.hash === hashedPassword;
+                        }
+                    } catch (error) {
+                        console.error('Failed to check Firebase password:', error);
+                    }
+                }
+                
+                // Fall back to localStorage
+                const savedHash = localStorage.getItem(this.passwordKey);
+                return savedHash === hashedPassword;
+            }
+
+            async hasPassword() {
+                // Check Firebase first
+                if (window.database) {
+                    try {
+                        const passwordRef = window.firebaseRef(window.database, `legacyPasswords/${this.userId}`);
+                        const snapshot = await window.firebaseGet(passwordRef);
+                        if (snapshot.exists()) {
+                            return true;
+                        }
+                    } catch (error) {
+                        console.error('Failed to check Firebase password:', error);
+                    }
+                }
+                
+                // Check localStorage
+                return localStorage.getItem(this.passwordKey) !== null;
+            }
+
+            createSession() {
+                const sessionData = {
+                    timestamp: Date.now(),
+                    expires: Date.now() + this.sessionDuration
+                };
+                sessionStorage.setItem(this.sessionKey, JSON.stringify(sessionData));
+            }
+
+            isSessionValid() {
+                const sessionData = sessionStorage.getItem(this.sessionKey);
+                if (!sessionData) return false;
+                
+                try {
+                    const session = JSON.parse(sessionData);
+                    return Date.now() < session.expires;
+                } catch {
+                    return false;
+                }
+            }
+
+            clearSession() {
+                sessionStorage.removeItem(this.sessionKey);
+            }
+        }
+
         const userAuth = new UserAuthManager();
         const passwordManager = new PasswordManager();
 
@@ -2375,6 +2476,9 @@
             document.getElementById('userRegisterForm').style.display = 'none';
             document.getElementById('legacyLoginForm').style.display = 'block';
             document.getElementById('authFormDescription').textContent = 'Modo compatibilidad';
+            
+            // Initialize legacy mode
+            initializeLegacyMode();
         }
 
         async function handleUserLogin() {
@@ -2690,6 +2794,23 @@
             console.log('👤 No valid session, showing user authentication');
             showLoginForm();
             document.getElementById('emailInput').focus();
+        }
+
+        // Initialize legacy mode when selected
+        async function initializeLegacyMode() {
+            const hasPassword = await passwordManager.hasPassword();
+            
+            if (hasPassword) {
+                // Show login form
+                document.getElementById('loginForm').style.display = 'block';
+                document.getElementById('setupForm').style.display = 'none';
+                document.getElementById('passwordInput').focus();
+            } else {
+                // Show password setup form
+                document.getElementById('loginForm').style.display = 'none';
+                document.getElementById('setupForm').style.display = 'block';
+                document.getElementById('newPasswordInput').focus();
+            }
         }
 
         // Handle Enter key in authentication inputs
