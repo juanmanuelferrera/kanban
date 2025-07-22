@@ -3550,7 +3550,7 @@
             const projectList = document.getElementById('projectList');
             projectList.innerHTML = '';
             
-            // Add drag and drop event listeners to the container
+            // Add drag and drop event listeners to the container (for task drops)
             projectList.addEventListener('dragover', handleProjectDragOver);
             projectList.addEventListener('drop', handleProjectDrop);
 
@@ -3610,8 +3610,6 @@
                 // Add drag and drop functionality
                 projectDiv.draggable = true;
                 projectDiv.addEventListener('dragstart', handleProjectDragStart);
-                projectDiv.addEventListener('dragover', handleProjectDragOver);
-                projectDiv.addEventListener('drop', handleProjectDrop);
                 projectDiv.addEventListener('dragend', handleProjectDragEnd);
 
                 projectDiv.onclick = (e) => {
