@@ -3944,6 +3944,11 @@
         }
 
         async function deleteTask(column, index) {
+            // Temporarily disable real-time sync during delete to prevent race conditions
+            if (storage.realtimeUnsubscribe) {
+                storage.stopRealtimeListener();
+            }
+            
             // 1. UPDATE: Modify the data array directly
             projects[currentProject].tasks[column].splice(index, 1);
             
@@ -3953,6 +3958,13 @@
             // 3. RENDER: Update the UI
             renderTasks();
             renderProjects(); // Update task counts
+            
+            // Re-enable real-time sync after a short delay
+            setTimeout(() => {
+                if (storage.setupRealtimeListener) {
+                    storage.setupRealtimeListener();
+                }
+            }, 1000);
         }
 
         function closeModal() {
