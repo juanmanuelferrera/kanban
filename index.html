@@ -738,11 +738,16 @@
             background: transparent;
             border: none;
             border-radius: 6px;
-            padding: 4px 6px;
+            padding: 6px 8px;
             color: #9ca3af;
             cursor: pointer;
-            font-size: 12px;
+            font-size: 16px;
             transition: all 0.2s ease;
+            min-width: 28px;
+            height: 28px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .task-image-indicator {
@@ -771,6 +776,7 @@
         .attach-image-task:hover {
             background: #f0f9ff;
             color: #3b82f6;
+            transform: scale(1.1);
         }
         .task-image-indicator:hover {
             background: #1e40af;
@@ -3476,11 +3482,11 @@
                     // Create attach image button
                     const attachBtn = document.createElement('button');
                     attachBtn.className = 'attach-image-task';
-                    attachBtn.innerHTML = '📷';
+                    attachBtn.innerHTML = '🖼️';
                     attachBtn.title = 'Attach image';
                     attachBtn.onclick = (e) => {
                         e.stopPropagation();
-                        console.log('📷 Camera button clicked for task:', column, index);
+                        console.log('🖼️ Image attach button clicked for task:', column, index);
                         attachImageToTask(column, index);
                     };
                     
@@ -3852,31 +3858,98 @@
 
         // Image attachment functions
         function attachImageToTask(column, index) {
-            console.log('📷 Attaching image to task:', column, index);
+            console.log('🖼️ Attaching image to task:', column, index);
+            
+            // Validate inputs
+            if (!currentProject || !projects[currentProject] || !projects[currentProject].tasks[column]) {
+                console.error('❌ Invalid project or column:', currentProject, column);
+                return;
+            }
+            
+            if (index >= projects[currentProject].tasks[column].length) {
+                console.error('❌ Invalid task index:', index);
+                return;
+            }
+            
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = 'image/*';
+            input.style.display = 'none'; // Hide the input
+            document.body.appendChild(input); // Add to DOM temporarily
+            
             input.onchange = (e) => {
                 const file = e.target.files[0];
+                console.log('📁 File selected:', file ? file.name : 'none');
+                
                 if (file) {
+                    // Check file size (limit to 5MB)
+                    if (file.size > 5 * 1024 * 1024) {
+                        alert('Image is too large. Please choose an image smaller than 5MB.');
+                        document.body.removeChild(input);
+                        return;
+                    }
+                    
                     const reader = new FileReader();
                     reader.onload = (e) => {
-                        const imageData = e.target.result;
-                        // Convert string task to object if needed
-                        let task = projects[currentProject].tasks[column][index];
-                        if (typeof task === 'string') {
-                            task = { text: task };
-                            projects[currentProject].tasks[column][index] = task;
+                        try {
+                            const imageData = e.target.result;
+                            console.log('📸 Image data loaded, size:', imageData.length);
+                            
+                            // Convert string task to object if needed
+                            let task = projects[currentProject].tasks[column][index];
+                            if (typeof task === 'string') {
+                                task = { text: task };
+                                projects[currentProject].tasks[column][index] = task;
+                            }
+                            
+                            // Add image to task
+                            task.image = imageData;
+                            
+                            console.log('✅ Image attached to task successfully');
+                            renderTasks();
+                            saveData();
+                            
+                            // Show success feedback
+                            const notification = document.createElement('div');
+                            notification.textContent = '✅ Image attached!';
+                            notification.style.cssText = `
+                                position: fixed;
+                                top: 20px;
+                                right: 20px;
+                                background: #10b981;
+                                color: white;
+                                padding: 10px 15px;
+                                border-radius: 6px;
+                                z-index: 10000;
+                                font-size: 14px;
+                            `;
+                            document.body.appendChild(notification);
+                            setTimeout(() => notification.remove(), 2000);
+                            
+                        } catch (error) {
+                            console.error('❌ Error processing image:', error);
+                            alert('Error processing image. Please try again.');
                         }
-                        // Add image to task
-                        task.image = imageData;
-                        renderTasks();
-                        saveData();
-                        console.log('📎 Image attached to task');
+                        
+                        // Clean up
+                        document.body.removeChild(input);
                     };
+                    
+                    reader.onerror = () => {
+                        console.error('❌ Error reading file');
+                        alert('Error reading file. Please try again.');
+                        document.body.removeChild(input);
+                    };
+                    
                     reader.readAsDataURL(file);
+                } else {
+                    // User cancelled file selection
+                    document.body.removeChild(input);
                 }
             };
+            
+            // Trigger file selection
+            console.log('📂 Opening file picker...');
             input.click();
         }
 
