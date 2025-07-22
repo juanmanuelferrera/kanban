@@ -1275,10 +1275,9 @@
         <div class="header">
             <div class="workspace-selector">
                 <select id="workspaceSelect" class="workspace-dropdown">
-                    <option value="personal">📁 Personal Workspace</option>
+                    <option value="personal">📁 Main Workspace</option>
                 </select>
                 <button class="workspace-btn" onclick="showWorkspaceModal()">+</button>
-                <button class="workspace-btn" onclick="deleteCurrentWorkspace()" title="Eliminar workspace actual" style="background: #ef4444;">🗑️</button>
             </div>
             <input type="text" class="board-title" id="boardTitle" value="My Kanban Board" placeholder="Enter board title...">
             <div class="project-info">
@@ -1506,12 +1505,12 @@
 
                 const success = { firebase: false, localStorage: false };
 
-                // Always save to localStorage as backup
+                // Always save to localStorage as backup (workspace-specific keys)
                 try {
-                    localStorage.setItem('kanbanProjects', JSON.stringify(data.projects));
-                    localStorage.setItem('currentProject', data.currentProject);
-                    localStorage.setItem('kanbanVersion', data.version);
-                    localStorage.setItem('projectTrash', JSON.stringify(data.projectTrash));
+                    localStorage.setItem(`kanbanProjects_${this.workspaceId}`, JSON.stringify(data.projects));
+                    localStorage.setItem(`currentProject_${this.workspaceId}`, data.currentProject);
+                    localStorage.setItem(`kanbanVersion_${this.workspaceId}`, data.version);
+                    localStorage.setItem(`projectTrash_${this.workspaceId}`, JSON.stringify(data.projectTrash));
                     success.localStorage = true;
                 } catch (error) {
                     console.error('localStorage save failed:', error);
@@ -1555,13 +1554,13 @@
                     }
                 }
 
-                // Fallback to localStorage
+                // Fallback to localStorage (workspace-specific keys)
                 if (!data) {
                     try {
-                        const savedProjects = localStorage.getItem('kanbanProjects');
-                        const savedCurrentProject = localStorage.getItem('currentProject');
-                        const savedVersion = localStorage.getItem('kanbanVersion');
-                        const savedTrash = localStorage.getItem('projectTrash');
+                        const savedProjects = localStorage.getItem(`kanbanProjects_${this.workspaceId}`);
+                        const savedCurrentProject = localStorage.getItem(`currentProject_${this.workspaceId}`);
+                        const savedVersion = localStorage.getItem(`kanbanVersion_${this.workspaceId}`);
+                        const savedTrash = localStorage.getItem(`projectTrash_${this.workspaceId}`);
 
                         if (savedProjects) {
                             data = {
@@ -1774,11 +1773,12 @@
 
         // Legacy Storage Manager (keeping for backward compatibility)
         class StorageManager {
-            constructor() {
-                this.storageKey = 'kanbanProjects';
-                this.currentProjectKey = 'currentProject';
-                this.versionKey = 'kanbanVersion';
-                this.lastBackupKey = 'lastBackup';
+            constructor(workspaceId = 'personal') {
+                this.workspaceId = workspaceId;
+                this.storageKey = `kanbanProjects_${workspaceId}`;
+                this.currentProjectKey = `currentProject_${workspaceId}`;
+                this.versionKey = `kanbanVersion_${workspaceId}`;
+                this.lastBackupKey = `lastBackup_${workspaceId}`;
                 this.initIndexedDB();
             }
 
@@ -2539,9 +2539,10 @@
                     });
                 }
                 
-                // Also save to localStorage for offline access
-                localStorage.setItem('kanbanProjects', JSON.stringify(projects));
-                localStorage.setItem('currentProject', currentProject || '');
+                // Also save to localStorage for offline access (workspace-specific keys)
+                const workspaceId = currentWorkspace || 'personal';
+                localStorage.setItem(`kanbanProjects_${workspaceId}`, JSON.stringify(projects));
+                localStorage.setItem(`currentProject_${workspaceId}`, currentProject || '');
             } catch (error) {
                 console.error('Failed to save user data:', error);
             }
@@ -3828,7 +3829,7 @@
                 userWorkspaces = {
                     'personal': {
                         id: 'personal',
-                        name: '📁 Personal Workspace',
+                        name: '📁 Main Workspace',
                         type: 'private',
                         owner: storage.userId,
                         created: new Date().toISOString()
@@ -3995,7 +3996,7 @@
             console.log('🗑️ Delete workspace requested:', workspaceId);
             
             if (!workspaceId || workspaceId === 'personal') {
-                alert('No puedes eliminar el workspace personal');
+                alert('No puedes eliminar el workspace principal');
                 return;
             }
             
@@ -4042,14 +4043,6 @@
             }
         }
 
-        function deleteCurrentWorkspace() {
-            if (!currentWorkspace || currentWorkspace === 'personal') {
-                alert('No puedes eliminar el workspace personal');
-                return;
-            }
-            
-            deleteWorkspace(currentWorkspace);
-        }
 
         async function switchWorkspace(event) {
             const newWorkspaceId = event.target.value;
@@ -4070,6 +4063,11 @@
                 
                 // Update storage to use workspace-specific data
                 storage.workspaceId = currentWorkspace;
+                
+                // Create new storage manager for new workspace (if using legacy system)
+                if (storage instanceof StorageManager) {
+                    storage = new StorageManager(currentWorkspace);
+                }
                 
                 // Clear current data
                 console.log('🗑️ Clearing current data...');
