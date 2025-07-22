@@ -3471,6 +3471,7 @@
                     attachBtn.title = 'Attach image';
                     attachBtn.onclick = (e) => {
                         e.stopPropagation();
+                        console.log('📷 Camera button clicked for task:', column, index);
                         attachImageToTask(column, index);
                     };
                     
@@ -3842,6 +3843,7 @@
 
         // Image attachment functions
         function attachImageToTask(column, index) {
+            console.log('📷 Attaching image to task:', column, index);
             const input = document.createElement('input');
             input.type = 'file';
             input.accept = 'image/*';
