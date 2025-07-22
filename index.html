@@ -2049,6 +2049,56 @@
         // Initialize storage manager
         const storage = new FirebaseStorageManager();
 
+        // Define auth functions EARLY to ensure they're available for HTML onclick handlers
+        window.showLoginForm = function() {
+            document.getElementById('userLoginForm').style.display = 'block';
+            document.getElementById('userRegisterForm').style.display = 'none';
+            document.getElementById('legacyLoginForm').style.display = 'none';
+            document.getElementById('authFormDescription').textContent = 'Accede a tu cuenta personal';
+        };
+
+        window.showRegisterForm = function() {
+            document.getElementById('userLoginForm').style.display = 'none';
+            document.getElementById('userRegisterForm').style.display = 'block';
+            document.getElementById('legacyLoginForm').style.display = 'none';
+            document.getElementById('authFormDescription').textContent = 'Crea tu cuenta personal';
+        };
+
+        window.showLegacyLogin = function() {
+            console.log('🔄 Switching to legacy login mode...');
+            document.getElementById('userLoginForm').style.display = 'none';
+            document.getElementById('userRegisterForm').style.display = 'none';
+            document.getElementById('legacyLoginForm').style.display = 'block';
+            document.getElementById('authFormDescription').textContent = 'Modo compatibilidad';
+            
+            // Initialize legacy mode
+            console.log('🚀 Calling initializeLegacyMode...');
+            if (window.initializeLegacyMode) {
+                window.initializeLegacyMode();
+            } else {
+                console.error('❌ initializeLegacyMode not yet available');
+                setTimeout(() => window.initializeLegacyMode(), 100);
+            }
+        };
+
+        // Placeholder functions for async operations - will be replaced later
+        window.handleUserLogin = async function() { console.log('handleUserLogin called early'); };
+        window.handleUserRegister = async function() { console.log('handleUserRegister called early'); };
+        window.checkPassword = async function() { console.log('checkPassword called early'); };
+        window.setupPassword = async function() { console.log('setupPassword called early'); };
+        window.initializeLegacyMode = async function() { console.log('initializeLegacyMode called early - waiting for implementation'); };
+
+        console.log('✅ Early auth functions defined:', {
+            showLoginForm: typeof window.showLoginForm,
+            showRegisterForm: typeof window.showRegisterForm, 
+            showLegacyLogin: typeof window.showLegacyLogin,
+            handleUserLogin: typeof window.handleUserLogin,
+            handleUserRegister: typeof window.handleUserRegister,
+            checkPassword: typeof window.checkPassword,
+            setupPassword: typeof window.setupPassword,
+            initializeLegacyMode: typeof window.initializeLegacyMode
+        });
+
         // Password Protection System removed - using legacy PasswordManager instead
 
         // New User Authentication Manager
@@ -2353,36 +2403,11 @@
         const passwordManager = new PasswordManager();
 
         // New User Authentication UI Functions
-        function showLoginForm() {
-            document.getElementById('userLoginForm').style.display = 'block';
-            document.getElementById('userRegisterForm').style.display = 'none';
-            document.getElementById('legacyLoginForm').style.display = 'none';
-            document.getElementById('authFormDescription').textContent = 'Accede a tu cuenta personal';
-        }
-        window.showLoginForm = showLoginForm;
-
-        function showRegisterForm() {
-            document.getElementById('userLoginForm').style.display = 'none';
-            document.getElementById('userRegisterForm').style.display = 'block';
-            document.getElementById('legacyLoginForm').style.display = 'none';
-            document.getElementById('authFormDescription').textContent = 'Crea tu cuenta personal';
-        }
-        window.showRegisterForm = showRegisterForm;
-
-        function showLegacyLogin() {
-            document.getElementById('userLoginForm').style.display = 'none';
-            document.getElementById('userRegisterForm').style.display = 'none';
-            document.getElementById('legacyLoginForm').style.display = 'block';
-            document.getElementById('authFormDescription').textContent = 'Modo compatibilidad';
-            
-            // Initialize legacy mode
-            initializeLegacyMode();
-        }
-        window.showLegacyLogin = showLegacyLogin;
+        // Auth UI functions now defined early for immediate availability
 
         // Functions are assigned to window immediately after definition
 
-        async function handleUserLogin() {
+        window.handleUserLogin = async function() {
             const email = document.getElementById('emailInput').value.trim();
             const password = document.getElementById('userPasswordInput').value;
             const errorDiv = document.getElementById('userLoginError');
@@ -2418,10 +2443,9 @@
                 errorDiv.textContent = 'Error al iniciar sesión: ' + error.message;
                 errorDiv.style.display = 'block';
             }
-        }
-        window.handleUserLogin = handleUserLogin;
+        };
 
-        async function handleUserRegister() {
+        window.handleUserRegister = async function() {
             const email = document.getElementById('registerEmail').value.trim();
             const password = document.getElementById('registerPassword').value;
             const confirmPassword = document.getElementById('registerConfirmPassword').value;
@@ -2481,8 +2505,7 @@
                 errorDiv.textContent = 'Error al registrar usuario: ' + error.message;
                 errorDiv.style.display = 'block';
             }
-        }
-        window.handleUserRegister = handleUserRegister;
+        };
 
         async function initializeUserSession(userHash, email) {
             // Update storage to use the new user system
@@ -2610,7 +2633,8 @@
         }
 
         // Password UI Functions (Legacy System)
-        async function checkPassword() {
+        window.checkPassword = async function() {
+            console.log('🔐 Checking password...');
             const password = document.getElementById('passwordInput').value;
             const errorDiv = document.getElementById('passwordError');
 
@@ -2630,10 +2654,10 @@
                 document.getElementById('passwordInput').value = '';
                 document.getElementById('passwordInput').focus();
             }
-        }
-        window.checkPassword = checkPassword;
+        };
 
-        async function setupPassword() {
+        window.setupPassword = async function() {
+            console.log('📝 Setting up new password...');
             const newPassword = document.getElementById('newPasswordInput').value;
             const confirmPassword = document.getElementById('confirmPasswordInput').value;
             const errorDiv = document.getElementById('setupError');
@@ -2653,8 +2677,7 @@
             await passwordManager.setPassword(newPassword);
             passwordManager.createSession();
             unlockApp();
-        }
-        window.setupPassword = setupPassword;
+        };
 
         // Verify all auth functions are properly loaded
         console.log('✅ Auth functions loaded:', {
@@ -2712,22 +2735,35 @@
             document.getElementById('emailInput').focus();
         }
 
-        // Initialize legacy mode when selected
-        async function initializeLegacyMode() {
-            const hasPassword = await passwordManager.hasPassword();
+        // Replace early placeholder with real implementation
+        window.initializeLegacyMode = async function() {
+            console.log('🔧 Initializing legacy mode...');
             
-            if (hasPassword) {
-                // Show login form
-                document.getElementById('loginForm').style.display = 'block';
-                document.getElementById('setupForm').style.display = 'none';
-                document.getElementById('passwordInput').focus();
-            } else {
-                // Show password setup form
+            try {
+                const hasPassword = await passwordManager.hasPassword();
+                console.log('🔍 Has password check result:', hasPassword);
+                
+                if (hasPassword) {
+                    // Show login form
+                    console.log('🔑 Password exists - showing login form');
+                    document.getElementById('loginForm').style.display = 'block';
+                    document.getElementById('setupForm').style.display = 'none';
+                    document.getElementById('passwordInput').focus();
+                } else {
+                    // Show password setup form
+                    console.log('📝 No password - showing setup form');
+                    document.getElementById('loginForm').style.display = 'none';
+                    document.getElementById('setupForm').style.display = 'block';
+                    document.getElementById('newPasswordInput').focus();
+                }
+            } catch (error) {
+                console.error('❌ Error initializing legacy mode:', error);
+                // Fallback to setup form
                 document.getElementById('loginForm').style.display = 'none';
                 document.getElementById('setupForm').style.display = 'block';
                 document.getElementById('newPasswordInput').focus();
             }
-        }
+        };
 
         // Handle Enter key in authentication inputs
         document.addEventListener('keydown', function(e) {
