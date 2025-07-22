@@ -3033,12 +3033,23 @@
 
         // Render tasks for current project
         function renderTasks() {
+            // Defensive check for valid project data
+            if (!currentProject || !projects[currentProject] || !projects[currentProject].tasks) {
+                console.log('⚠️ No valid project data for rendering tasks');
+                clearAllTasks();
+                return;
+            }
+            
+            console.log('🎨 Rendering tasks for project:', currentProject);
             const columns = ['todo', 'doing', 'done'];
             columns.forEach(column => {
                 const taskList = document.getElementById(column + 'List');
+                if (!taskList) return;
+                
                 taskList.innerHTML = '';
 
-                projects[currentProject].tasks[column].forEach((task, index) => {
+                const tasks = projects[currentProject].tasks[column] || [];
+                tasks.forEach((task, index) => {
                     // Create drop indicator
                     const dropIndicator = document.createElement('div');
                     dropIndicator.className = 'drop-indicator';
@@ -4109,20 +4120,30 @@
         }
 
         function clearAllTasks() {
-            // Clear all task lists immediately
-            const todoList = document.getElementById('todoList');
-            const doingList = document.getElementById('doingList');
-            const doneList = document.getElementById('doneList');
+            // Clear all task lists immediately and thoroughly
+            const columns = ['todo', 'doing', 'done'];
             
-            if (todoList) todoList.innerHTML = '';
-            if (doingList) doingList.innerHTML = '';
-            if (doneList) doneList.innerHTML = '';
+            columns.forEach(column => {
+                const taskList = document.getElementById(column + 'List');
+                if (taskList) {
+                    // Clear all children including tasks and drop indicators
+                    while (taskList.firstChild) {
+                        taskList.removeChild(taskList.firstChild);
+                    }
+                    // Double-check with innerHTML clear
+                    taskList.innerHTML = '';
+                }
+            });
             
             // Clear project info
             const currentProjectSpan = document.getElementById('currentProject');
-            if (currentProjectSpan) currentProjectSpan.textContent = 'Loading...';
+            if (currentProjectSpan) currentProjectSpan.textContent = 'No project';
             
-            console.log('🧹 All tasks cleared from UI');
+            // Clear board title
+            const boardTitle = document.getElementById('boardTitle');
+            if (boardTitle) boardTitle.value = 'Loading workspace...';
+            
+            console.log('🧹 All tasks and UI elements cleared thoroughly');
         }
 
         async function switchWorkspace(event) {
@@ -4173,11 +4194,14 @@
                 // Switch to first available project or create default
                 if (Object.keys(projects).length > 0) {
                     const firstProject = Object.keys(projects)[0];
+                    console.log('🎯 Switching to project:', firstProject);
                     switchProject(firstProject);
                 } else {
-                    // Create default project if workspace is empty
+                    console.log('📝 Creating default project for empty workspace');
                     createDefaultProject();
                 }
+                
+                console.log('✅ Workspace switch completed');
                 
                 console.log(`✅ Switched to workspace: ${userWorkspaces[currentWorkspace]?.name}`);
                 
