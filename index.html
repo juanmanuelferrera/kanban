@@ -1126,6 +1126,10 @@
                 gap: 10px;
                 text-align: center;
             }
+            
+            .header-bottom > div:last-child {
+                justify-content: center !important;
+            }
 
             .workspace-selector {
                 width: 100%;
@@ -1333,21 +1337,23 @@
 
     <div class="main-content">
         <div class="header">
-            <div class="header-top" style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px; position: relative;">
+            <div class="header-top" style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
                 <div class="workspace-selector">
                     <select id="workspaceSelect" class="workspace-dropdown" style="font-size: 16px; font-weight: 600; min-width: 200px; text-align: center; background: rgba(255,255,255,0.9); border: 1px solid #d1d5db;">
                         <option value="personal">📁 Main Workspace</option>
                     </select>
                     <button class="workspace-btn" onclick="showWorkspaceModal()">+</button>
                 </div>
-                <button onclick="showInfoModal()" style="position: absolute; right: 0; background: rgba(255,255,255,0.9); border: 1px solid #d1d5db; border-radius: 50%; width: 36px; height: 36px; cursor: pointer; color: #374151; font-size: 16px; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(59, 130, 246, 0.1)'; this.style.borderColor='#3b82f6'; this.style.color='#1e40af';" onmouseout="this.style.background='rgba(255,255,255,0.9)'; this.style.borderColor='#d1d5db'; this.style.color='#374151';" title="App Information">
-                    ℹ️
-                </button>
             </div>
             <div class="header-bottom" style="display: flex; justify-content: space-between; align-items: center;">
                 <input type="text" class="board-title" id="boardTitle" value="" placeholder="Enter board title...">
-                <div class="project-info">
-                    Board: <span id="currentProject">Default Board</span>
+                <div style="display: flex; align-items: center; gap: 12px;">
+                    <div class="project-info">
+                        Board: <span id="currentProject">Default Board</span>
+                    </div>
+                    <button onclick="showInfoModal()" style="background: rgba(255,255,255,0.9); border: 1px solid #d1d5db; border-radius: 50%; width: 32px; height: 32px; cursor: pointer; color: #374151; font-size: 14px; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.1); display: flex; align-items: center; justify-content: center;" onmouseover="this.style.background='rgba(59, 130, 246, 0.1)'; this.style.borderColor='#3b82f6'; this.style.color='#1e40af';" onmouseout="this.style.background='rgba(255,255,255,0.9)'; this.style.borderColor='#d1d5db'; this.style.color='#374151';" title="App Information">
+                        ℹ️
+                    </button>
                 </div>
             </div>
         </div>
