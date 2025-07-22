@@ -3940,18 +3940,6 @@
                         showTaskContextMenu(e, column, index);
                     });
                     
-                    // Add hover tooltip for right-click instructions
-                    let hoverTimeout;
-                    taskDiv.addEventListener('mouseenter', (e) => {
-                        hoverTimeout = setTimeout(() => {
-                            showRightClickTooltip(e, taskDiv);
-                        }, 1000); // Show after 1 second
-                    });
-                    
-                    taskDiv.addEventListener('mouseleave', () => {
-                        clearTimeout(hoverTimeout);
-                        hideRightClickTooltip();
-                    });
 
                     taskList.appendChild(taskDiv);
                 });
@@ -4670,53 +4658,6 @@
             }
         }
 
-        // Tooltip functions
-        let currentTooltip = null;
-
-        function showRightClickTooltip(event, taskElement) {
-            // Don't show tooltip if task is being edited
-            if (taskElement.querySelector('[contenteditable="true"]')) {
-                return;
-            }
-            
-            const tooltip = document.createElement('div');
-            tooltip.className = 'right-click-tooltip';
-            tooltip.innerHTML = '💡 Right-click for image options';
-            tooltip.style.cssText = `
-                position: fixed;
-                background: #1f2937;
-                color: white;
-                padding: 8px 12px;
-                border-radius: 6px;
-                font-size: 12px;
-                z-index: 10000;
-                pointer-events: none;
-                box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-                white-space: nowrap;
-            `;
-            
-            // Position tooltip above the task
-            const rect = taskElement.getBoundingClientRect();
-            tooltip.style.left = (rect.left + rect.width / 2 - 80) + 'px'; // Center horizontally
-            tooltip.style.top = (rect.top - 35) + 'px'; // Above the task
-            
-            document.body.appendChild(tooltip);
-            currentTooltip = tooltip;
-            
-            // Auto-hide after 3 seconds
-            setTimeout(() => {
-                if (currentTooltip === tooltip) {
-                    hideRightClickTooltip();
-                }
-            }, 3000);
-        }
-
-        function hideRightClickTooltip() {
-            if (currentTooltip) {
-                currentTooltip.remove();
-                currentTooltip = null;
-            }
-        }
 
         // Task editing functions
         function startEditingTask(element, column, index) {
