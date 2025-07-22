@@ -4108,6 +4108,22 @@
             }
         }
 
+        function clearAllTasks() {
+            // Clear all task lists immediately
+            const todoList = document.getElementById('todoList');
+            const doingList = document.getElementById('doingList');
+            const doneList = document.getElementById('doneList');
+            
+            if (todoList) todoList.innerHTML = '';
+            if (doingList) doingList.innerHTML = '';
+            if (doneList) doneList.innerHTML = '';
+            
+            // Clear project info
+            const currentProjectSpan = document.getElementById('currentProject');
+            if (currentProjectSpan) currentProjectSpan.textContent = 'Loading...';
+            
+            console.log('🧹 All tasks cleared from UI');
+        }
 
         async function switchWorkspace(event) {
             const newWorkspaceId = event.target.value;
@@ -4134,11 +4150,17 @@
                     storage = new StorageManager(currentWorkspace);
                 }
                 
-                // Clear current data
-                console.log('🗑️ Clearing current data...');
+                // Clear current data and UI immediately
+                console.log('🗑️ Clearing current data and UI...');
                 projects = {};
                 currentProject = null;
                 projectTrash = [];
+                
+                // Clear all tasks from UI immediately
+                clearAllTasks();
+                
+                // Update board title to indicate loading
+                document.getElementById('boardTitle').value = 'Loading workspace...';
                 
                 // Load new workspace data
                 console.log('📥 Loading new workspace data...');
