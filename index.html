@@ -2536,15 +2536,14 @@
         }
 
         function updateUserInterface(email) {
-            // Add logout button and user info to the sidebar
+            // Add compact user info to the sidebar
             const sidebar = document.querySelector('.sidebar');
             const userInfoDiv = document.createElement('div');
             userInfoDiv.className = 'user-info';
             userInfoDiv.innerHTML = `
-                <div style="margin-bottom: 15px; padding: 10px; background: rgba(255,255,255,0.1); border-radius: 8px; font-size: 12px;">
-                    <div style="color: rgba(255,255,255,0.8);">Conectado como:</div>
-                    <div style="color: white; font-weight: bold;">${email}</div>
-                    <button onclick="handleLogout()" style="margin-top: 8px; background: rgba(255,255,255,0.2); border: none; color: white; padding: 4px 8px; border-radius: 4px; font-size: 11px; cursor: pointer;">Cerrar Sesión</button>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; padding: 4px 6px; background: rgba(255,255,255,0.1); border-radius: 6px; font-size: 10px;">
+                    <span style="color: rgba(255,255,255,0.9); font-weight: 500;">👤 ${email.split('@')[0]}</span>
+                    <button onclick="handleLogout()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 2px 6px; border-radius: 3px; font-size: 10px; cursor: pointer;">Salir</button>
                 </div>
             `;
             
