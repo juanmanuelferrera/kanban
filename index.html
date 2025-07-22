@@ -3666,23 +3666,38 @@
             e.preventDefault();
             e.stopPropagation();
             
+            console.log('🎯 Project drop event triggered');
+            console.log('🔍 draggedTaskData:', draggedTaskData);
+            console.log('🔍 draggedProject:', draggedProject);
+            
             const targetElement = e.target.closest('.project-item');
-            if (!targetElement) return;
+            if (!targetElement) {
+                console.log('❌ No target element found');
+                return;
+            }
             
             const targetProjectId = targetElement.getAttribute('data-project');
+            console.log('🎯 Target project ID:', targetProjectId);
 
             // Check if this is a task being dropped on a project (cross-board move)
             if (draggedTaskData && draggedTaskData.project && targetProjectId) {
+                console.log('🔄 Attempting cross-board task move');
                 // Move task to different board
                 if (draggedTaskData.project !== targetProjectId) {
+                    console.log(`✅ Moving task from ${draggedTaskData.project} to ${targetProjectId}`);
                     moveTaskToProject(draggedTaskData, targetProjectId);
+                } else {
+                    console.log('⚠️ Same project, skipping move');
                 }
             }
             // Check if this is a project reordering
             else if (draggedProject && targetProjectId && draggedProject !== targetProjectId) {
+                console.log('🔄 Attempting project reorder');
                 reorderProjects(draggedProject, targetProjectId);
                 renderProjects(); // Re-render to show new order
                 saveData(); // Save the new order
+            } else {
+                console.log('❌ No valid drop action found');
             }
 
             // Clean up
@@ -4820,6 +4835,8 @@
                 content: projects[currentProject].tasks[column][taskId]
             };
 
+            console.log('🚀 Task drag started:', draggedTaskData);
+
             e.target.classList.add('dragging');
 
             // Determine if this is reordering within the same column or moving between columns
@@ -4830,6 +4847,7 @@
                 const projectId = projectItem.getAttribute('data-project');
                 if (projectId !== currentProject) {
                     projectItem.classList.add('drop-target');
+                    console.log('✅ Added drop-target to project:', projectId);
                 }
             });
         }
