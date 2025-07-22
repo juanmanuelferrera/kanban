@@ -1527,6 +1527,15 @@
                     localStorage.setItem(`currentProject_${this.workspaceId}`, data.currentProject);
                     localStorage.setItem(`kanbanVersion_${this.workspaceId}`, data.version);
                     localStorage.setItem(`projectTrash_${this.workspaceId}`, JSON.stringify(data.projectTrash));
+                    
+                    // Store snapshot for conflict detection
+                    const snapshot = {
+                        projects: data.projects,
+                        currentProject: data.currentProject,
+                        projectTrash: data.projectTrash
+                    };
+                    localStorage.setItem(`lastSavedData_${this.workspaceId}`, JSON.stringify(snapshot));
+                    
                     success.localStorage = true;
                 } catch (error) {
                     console.error('localStorage save failed:', error);
@@ -1607,27 +1616,150 @@
                         // Only update if the data is newer
                         const localTimestamp = localStorage.getItem('lastSyncTimestamp') || '0';
                         if (data.timestamp > localTimestamp) {
-                            const previousProject = currentProject;
-                            projects = data.projects;
-                            projectTrash = data.projectTrash || [];
+                            console.log('📡 Received real-time update from Firebase');
                             
-                            // Ensure all projects have proper structure
-                            Object.keys(projects).forEach(projectId => {
-                                projects[projectId] = ensureProjectStructure(projects[projectId]);
-                            });
+                            // Check if we have local unsaved changes
+                            const hasUnsavedChanges = this.hasUnsavedChanges();
                             
-                            // Update UI but keep current project active
-                            renderProjects();
-                            renderKanbanBoard();
+                            if (hasUnsavedChanges) {
+                                console.log('⚠️ Local changes detected - merging instead of overwriting');
+                                this.mergeRemoteChanges(data);
+                            } else {
+                                console.log('✅ No local changes - safe to update');
+                                this.applyRemoteData(data);
+                            }
                             
                             localStorage.setItem('lastSyncTimestamp', data.timestamp);
-                            console.log('Real-time update received from Firebase');
                             
                             // Show sync notification
                             this.showSyncNotification('Data synced from cloud');
+                        } else {
+                            console.log('📡 Ignoring older remote data');
                         }
                     }
                 });
+            }
+
+            hasUnsavedChanges() {
+                // Check if current data differs from last saved data
+                const lastSavedData = localStorage.getItem(`lastSavedData_${this.workspaceId}`);
+                if (!lastSavedData) return false;
+                
+                try {
+                    const saved = JSON.parse(lastSavedData);
+                    const current = {
+                        projects: projects,
+                        currentProject: currentProject,
+                        projectTrash: projectTrash
+                    };
+                    
+                    return JSON.stringify(saved) !== JSON.stringify(current);
+                } catch (error) {
+                    console.error('Error checking unsaved changes:', error);
+                    return false;
+                }
+            }
+
+            applyRemoteData(data) {
+                const previousProject = currentProject;
+                projects = data.projects;
+                projectTrash = data.projectTrash || [];
+                
+                // Ensure all projects have proper structure
+                Object.keys(projects).forEach(projectId => {
+                    projects[projectId] = ensureProjectStructure(projects[projectId]);
+                });
+                
+                // Update UI but keep current project active
+                renderProjects();
+                renderKanbanBoard();
+                
+                console.log('✅ Applied remote data successfully');
+            }
+
+            mergeRemoteChanges(remoteData) {
+                console.log('🔄 Merging remote changes with local data');
+                
+                const localProjects = { ...projects };
+                const remoteProjects = remoteData.projects || {};
+                
+                // Merge projects at task level
+                Object.keys(remoteProjects).forEach(projectId => {
+                    if (!localProjects[projectId]) {
+                        // New project from remote - add it
+                        console.log(`➕ Adding new remote project: ${projectId}`);
+                        localProjects[projectId] = remoteProjects[projectId];
+                    } else {
+                        // Project exists locally - merge tasks
+                        console.log(`🔄 Merging tasks for project: ${projectId}`);
+                        localProjects[projectId] = this.mergeProjectTasks(
+                            localProjects[projectId], 
+                            remoteProjects[projectId]
+                        );
+                    }
+                });
+                
+                // Check for deleted projects (exist locally but not remotely)
+                Object.keys(localProjects).forEach(projectId => {
+                    if (!remoteProjects[projectId]) {
+                        console.log(`❓ Local project not in remote: ${projectId} - keeping local version`);
+                        // Keep local project - might be newly created
+                    }
+                });
+                
+                projects = localProjects;
+                
+                // Merge trash
+                const localTrash = projectTrash || [];
+                const remoteTrash = remoteData.projectTrash || [];
+                const mergedTrash = [...localTrash];
+                
+                remoteTrash.forEach(remoteItem => {
+                    if (!mergedTrash.find(local => local.originalId === remoteItem.originalId)) {
+                        console.log(`➕ Adding remote trash item: ${remoteItem.name}`);
+                        mergedTrash.push(remoteItem);
+                    }
+                });
+                
+                projectTrash = mergedTrash;
+                
+                // Update UI
+                renderProjects();
+                renderKanbanBoard();
+                
+                console.log('✅ Merge completed successfully');
+                
+                // Save merged result after a short delay
+                setTimeout(() => this.save(), 2000);
+            }
+
+            mergeProjectTasks(localProject, remoteProject) {
+                // Create merged project with remote metadata but merged tasks
+                const merged = {
+                    ...remoteProject, // Use remote name, title, etc.
+                    tasks: {
+                        todo: this.mergeTaskLists(localProject.tasks?.todo || [], remoteProject.tasks?.todo || []),
+                        doing: this.mergeTaskLists(localProject.tasks?.doing || [], remoteProject.tasks?.doing || []),
+                        done: this.mergeTaskLists(localProject.tasks?.done || [], remoteProject.tasks?.done || [])
+                    }
+                };
+                
+                return merged;
+            }
+
+            mergeTaskLists(localTasks, remoteTasks) {
+                // Simple merge: combine both lists and remove duplicates
+                // This isn't perfect but prevents data loss
+                const merged = [...localTasks];
+                
+                remoteTasks.forEach(remoteTask => {
+                    if (!merged.includes(remoteTask)) {
+                        merged.push(remoteTask);
+                        console.log(`➕ Adding remote task: ${remoteTask.substring(0, 30)}...`);
+                    }
+                });
+                
+                return merged;
             }
 
             async syncOfflineChanges() {
