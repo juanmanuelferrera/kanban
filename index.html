@@ -2030,23 +2030,84 @@
                 }, 3000);
             }
 
-            // Export data to JSON file
-            exportData() {
+            // Export data to JSON file - includes ALL workspaces
+            async exportData() {
                 try {
-                    console.log('📤 Starting data export...');
-                    console.log('📤 Projects data:', projects);
-                    console.log('📤 Current project:', currentProject);
-                    console.log('📤 Project trash:', projectTrash);
+                    console.log('📤 Starting comprehensive data export...');
+                    console.log('📤 Current workspace:', currentWorkspace);
+                    console.log('📤 All workspaces:', Object.keys(userWorkspaces));
+                    
+                    // Save current workspace data first
+                    console.log('💾 Saving current workspace data before export...');
+                    await saveData();
+                    
+                    // Collect data from all workspaces
+                    const allWorkspaceData = {};
+                    const allWorkspaceTrash = {};
+                    
+                    // Get data for each workspace
+                    for (const workspaceId of Object.keys(userWorkspaces)) {
+                        console.log(`📤 Collecting data for workspace: ${workspaceId}`);
+                        
+                        try {
+                            if (workspaceId === currentWorkspace) {
+                                // Current workspace - use in-memory data
+                                allWorkspaceData[workspaceId] = JSON.parse(JSON.stringify(projects || {}));
+                                allWorkspaceTrash[workspaceId] = JSON.parse(JSON.stringify(projectTrash || []));
+                            } else {
+                                // Other workspaces - load from Firebase
+                                if (window.database) {
+                                    const workspaceRef = window.firebaseRef(window.database, `workspaces/${workspaceId}/data`);
+                                    const snapshot = await window.firebaseGet(workspaceRef);
+                                    
+                                    if (snapshot.exists()) {
+                                        const workspaceData = snapshot.val();
+                                        allWorkspaceData[workspaceId] = workspaceData.projects || {};
+                                        allWorkspaceTrash[workspaceId] = workspaceData.projectTrash || [];
+                                    } else {
+                                        allWorkspaceData[workspaceId] = {};
+                                        allWorkspaceTrash[workspaceId] = [];
+                                    }
+                                } else {
+                                    console.warn(`⚠️ Cannot load data for workspace ${workspaceId} - no Firebase connection`);
+                                    allWorkspaceData[workspaceId] = {};
+                                    allWorkspaceTrash[workspaceId] = [];
+                                }
+                            }
+                        } catch (error) {
+                            console.error(`❌ Failed to load data for workspace ${workspaceId}:`, error);
+                            allWorkspaceData[workspaceId] = {};
+                            allWorkspaceTrash[workspaceId] = [];
+                        }
+                    }
                     
                     const data = {
-                        version: '1.0.0',
-                        projects: projects,
+                        version: '2.0.0',  // Updated version to indicate multi-workspace format
+                        exportType: 'multi-workspace',
+                        timestamp: new Date().toISOString(),
+                        currentWorkspace: currentWorkspace,
+                        
+                        // Workspace metadata
+                        workspaces: JSON.parse(JSON.stringify(userWorkspaces)),
+                        
+                        // Data for each workspace
+                        workspaceData: allWorkspaceData,
+                        workspaceTrash: allWorkspaceTrash,
+                        
+                        // Legacy format for backwards compatibility (current workspace only)
+                        projects: projects || {},
                         currentProject: currentProject,
                         projectTrash: projectTrash || [],
-                        timestamp: new Date().toISOString()
+                        
+                        // Export metadata
+                        metadata: {
+                            totalWorkspaces: Object.keys(userWorkspaces).length,
+                            totalProjects: Object.values(allWorkspaceData).reduce((sum, workspace) => sum + Object.keys(workspace).length, 0),
+                            exportedBy: 'Ultra Kanban v2.0'
+                        }
                     };
                     
-                    console.log('📤 Export data package:', data);
+                    console.log('📤 Export data package created:', data);
                     
                     const jsonString = JSON.stringify(data, null, 2);
                     console.log('📤 JSON string length:', jsonString.length);
@@ -2059,7 +2120,7 @@
                     
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `ultra-kanban-backup-${new Date().toISOString().split('T')[0]}.json`;
+                    a.download = `ultra-kanban-full-backup-${new Date().toISOString().split('T')[0]}.json`;
                     console.log('📤 Download filename:', a.download);
                     
                     document.body.appendChild(a);
@@ -2067,7 +2128,7 @@
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
                     
-                    console.log('✅ Export completed successfully');
+                    console.log('✅ Multi-workspace export completed successfully');
                     this.updateBackupStatus({ export: true, import: false });
                     
                 } catch (error) {
@@ -2337,13 +2398,23 @@
                 }
             }
 
-            // Export data as JSON file
+            // Export data as JSON file (single workspace - legacy system)
             exportData() {
                 try {
-                    console.log('📤 StorageManager: Starting data export...');
+                    console.log('📤 StorageManager: Starting single-workspace export...');
+                    console.warn('⚠️ StorageManager only exports current workspace data');
                     
                     const data = this.createDataPackage();
                     console.log('📤 StorageManager: Data package created:', data);
+                    
+                    // Add workspace info if available
+                    if (typeof userWorkspaces !== 'undefined' && currentWorkspace) {
+                        data.workspaceInfo = {
+                            currentWorkspace: currentWorkspace,
+                            workspaceName: userWorkspaces[currentWorkspace]?.name || 'Unknown Workspace'
+                        };
+                        console.log('📤 StorageManager: Added workspace info:', data.workspaceInfo);
+                    }
                     
                     const jsonString = JSON.stringify(data, null, 2);
                     console.log('📤 StorageManager: JSON string length:', jsonString.length);
@@ -2356,7 +2427,8 @@
                     
                     const a = document.createElement('a');
                     a.href = url;
-                    a.download = `ultra-kanban-backup-${new Date().toISOString().split('T')[0]}.json`;
+                    const workspaceLabel = currentWorkspace && currentWorkspace !== 'personal' ? `-${currentWorkspace}` : '';
+                    a.download = `ultra-kanban-workspace-backup${workspaceLabel}-${new Date().toISOString().split('T')[0]}.json`;
                     console.log('📤 StorageManager: Download filename:', a.download);
                     
                     document.body.appendChild(a);
@@ -2364,7 +2436,7 @@
                     document.body.removeChild(a);
                     URL.revokeObjectURL(url);
 
-                    console.log('✅ StorageManager: Export completed successfully');
+                    console.log('✅ StorageManager: Single-workspace export completed successfully');
                     this.updateBackupStatus({ export: true });
                     
                 } catch (error) {
@@ -3261,7 +3333,7 @@
         }, 5 * 60 * 1000);
 
         // Global functions for UI
-        function exportData() {
+        async function exportData() {
             try {
                 console.log('🔍 Export function called');
                 console.log('🔍 Storage object:', storage);
@@ -3274,7 +3346,7 @@
                 }
                 
                 console.log('🔍 Calling storage.exportData()');
-                storage.exportData();
+                await storage.exportData();
                 console.log('✅ Export completed successfully');
                 
             } catch (error) {
