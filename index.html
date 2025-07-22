@@ -1267,6 +1267,7 @@
                     <option value="personal">📁 Personal Workspace</option>
                 </select>
                 <button class="workspace-btn" onclick="showWorkspaceModal()">+</button>
+                <button class="workspace-btn" onclick="deleteCurrentWorkspace()" title="Eliminar workspace actual" style="background: #ef4444;">🗑️</button>
             </div>
             <input type="text" class="board-title" id="boardTitle" value="My Kanban Board" placeholder="Enter board title...">
             <div class="project-info">
@@ -3861,7 +3862,13 @@
             Object.keys(userWorkspaces).forEach(workspaceId => {
                 const workspace = userWorkspaces[workspaceId];
                 const isCurrentWorkspace = workspaceId === currentWorkspace;
-                const canDelete = workspaceId !== 'personal' && workspace.owner === storage.userId;
+                // Allow deletion of non-personal workspaces (more permissive)
+                const canDelete = workspaceId !== 'personal' && (
+                    !workspace.owner || // No owner set (legacy workspaces)
+                    workspace.owner === storage.userId || // User is owner
+                    workspace.owner === 'shared' // Shared workspace
+                );
+                console.log('🔍 Workspace delete check:', workspaceId, 'canDelete:', canDelete, 'owner:', workspace.owner, 'userId:', storage.userId);
                 
                 const workspaceDiv = document.createElement('div');
                 workspaceDiv.style.cssText = `
@@ -3975,6 +3982,8 @@
         }
         
         async function deleteWorkspace(workspaceId) {
+            console.log('🗑️ Delete workspace requested:', workspaceId);
+            
             if (!workspaceId || workspaceId === 'personal') {
                 alert('No puedes eliminar el workspace personal');
                 return;
@@ -3990,7 +3999,7 @@
             if (!confirmDelete) return;
             
             try {
-                console.log('🗑️ Deleting workspace:', workspaceId);
+                console.log('🗑️ Proceeding with workspace deletion:', workspaceId);
                 
                 // Remove from local storage
                 delete userWorkspaces[workspaceId];
@@ -4021,6 +4030,15 @@
                 console.error('❌ Error deleting workspace:', error);
                 alert('Error eliminando workspace. Intenta nuevamente.');
             }
+        }
+
+        function deleteCurrentWorkspace() {
+            if (!currentWorkspace || currentWorkspace === 'personal') {
+                alert('No puedes eliminar el workspace personal');
+                return;
+            }
+            
+            deleteWorkspace(currentWorkspace);
         }
 
         async function switchWorkspace(event) {
