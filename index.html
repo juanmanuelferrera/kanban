@@ -5045,31 +5045,23 @@
         function makeURLsClickable(text) {
             if (!text) return text;
             
+            // Simple and robust approach - just handle the most common cases
             let result = text;
             
             // Handle full URLs with protocol (http/https)
-            const httpRegex = /(https?:\/\/[^\s<>"]+[^\s<>".,:;!?)}\]])/gi;
-            result = result.replace(httpRegex, (url) => {
+            result = result.replace(/(https?:\/\/[^\s]+)/gi, (url) => {
                 const cleanUrl = url.replace(/[.,:;!?)}\]]+$/, '');
                 return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${cleanUrl}</a>`;
             });
             
-            // Handle URLs without protocol (www.example.com or domain.com)
-            const wwwRegex = /(?<!href="|>)(www\.[^\s<>"]+[^\s<>".,:;!?)}\]])/gi;
-            result = result.replace(wwwRegex, (url) => {
+            // Handle www URLs (simple approach)
+            result = result.replace(/\b(www\.[^\s]+)/gi, (url) => {
                 const cleanUrl = url.replace(/[.,:;!?)}\]]+$/, '');
-                return `<a href="https://${cleanUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${cleanUrl}</a>`;
-            });
-            
-            // Handle plain domains (example.com, but be more selective to avoid false positives)
-            const domainRegex = /(?<!href="|>|www\.)([a-zA-Z0-9-]+\.[a-zA-Z]{2,}(?:\/[^\s<>"]*)?[^\s<>".,:;!?)}\]])/gi;
-            result = result.replace(domainRegex, (match, domain) => {
-                // Only convert if it looks like a valid domain
-                if (domain.includes('.') && !domain.match(/^\d+\.\d+/)) {
-                    const cleanDomain = domain.replace(/[.,:;!?)}\]]+$/, '');
-                    return `<a href="https://${cleanDomain}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${cleanDomain}</a>`;
+                // Don't double-link if already part of an href
+                if (result.indexOf(`href="https://${cleanUrl}"`) !== -1) {
+                    return url;
                 }
-                return match;
+                return `<a href="https://${cleanUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${cleanUrl}</a>`;
             });
             
             return result;
