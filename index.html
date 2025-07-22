@@ -2046,6 +2046,9 @@
 
                 const now = new Date().toLocaleTimeString();
 
+                // Debug logging to track all calls
+                console.log('🔍 updateBackupStatus called with:', { success, errors, caller: new Error().stack.split('\n')[2] });
+                
                 // Handle export/import operations
                 if (success.export || success.import) {
                     if (success.export) {
@@ -2107,6 +2110,15 @@
                     statusEl.title = details.length ? details.join(' | ') : 'Unknown error - check console for details';
                     
                     console.error('❌ Complete save failure details:', errors);
+                    console.error('📊 Save failure context:', {
+                        timestamp: new Date().toISOString(),
+                        success: success,
+                        errors: errors,
+                        isOnline: this.isOnline,
+                        hasDatabase: !!window.database,
+                        workspaceId: this.workspaceId,
+                        stackTrace: new Error().stack
+                    });
                     
                     // Show error notification
                     this.showSyncNotification('❌ Save failed - check status for details');
