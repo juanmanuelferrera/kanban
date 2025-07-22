@@ -1000,8 +1000,8 @@
             }
 
             .project-list {
-                display: grid;
-                grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+                display: flex;
+                flex-direction: column;
                 gap: 6px;
                 min-height: auto;
                 max-height: 180px;
@@ -1080,7 +1080,8 @@
             }
 
             .project-list {
-                grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+                display: flex;
+                flex-direction: column;
                 gap: 4px;
                 max-height: 140px;
             }
