@@ -1610,6 +1610,8 @@
             }
 
             async save() {
+                console.log('💾 Starting save operation for workspace:', this.workspaceId);
+                
                 const data = {
                     version: '1.0.0',
                     projects: projects,
@@ -1619,9 +1621,23 @@
                 };
 
                 const success = { firebase: false, localStorage: false };
+                const errors = { firebase: null, localStorage: null };
 
                 // Always save to localStorage as backup (workspace-specific keys)
                 try {
+                    console.log('💾 Attempting localStorage save...');
+                    
+                    // Check if localStorage is available
+                    if (typeof Storage === "undefined") {
+                        throw new Error("localStorage not supported by this browser");
+                    }
+                    
+                    // Check available space (rough estimate)
+                    const testData = JSON.stringify(data.projects);
+                    if (testData.length > 5000000) { // 5MB rough limit
+                        console.warn('⚠️ Large data size may cause localStorage issues:', testData.length);
+                    }
+                    
                     localStorage.setItem(`kanbanProjects_${this.workspaceId}`, JSON.stringify(data.projects));
                     localStorage.setItem(`currentProject_${this.workspaceId}`, data.currentProject);
                     localStorage.setItem(`kanbanVersion_${this.workspaceId}`, data.version);
@@ -1636,26 +1652,50 @@
                     localStorage.setItem(`lastSavedData_${this.workspaceId}`, JSON.stringify(snapshot));
                     
                     success.localStorage = true;
+                    console.log('✅ localStorage save successful');
                 } catch (error) {
-                    console.error('localStorage save failed:', error);
+                    console.error('❌ localStorage save failed:', error);
+                    errors.localStorage = error.message;
                 }
 
                 // Save to Firebase if online
                 if (this.isOnline && window.database) {
                     try {
+                        console.log('☁️ Attempting Firebase save...');
+                        
+                        // Check Firebase connection
+                        if (!window.firebaseRef || !window.firebaseSet) {
+                            throw new Error("Firebase functions not available");
+                        }
+                        
                         const workspaceRef = window.firebaseRef(window.database, `workspaces/${this.workspaceId}/data`);
                         await window.firebaseSet(workspaceRef, data);
                         success.firebase = true;
                         this.lastSaveTime = Date.now(); // Track save time to prevent merge race conditions
-                        console.log(`Data saved to Firebase workspace: ${this.workspaceId}`);
+                        console.log('✅ Firebase save successful for workspace:', this.workspaceId);
                     } catch (error) {
-                        console.error('Firebase save failed:', error);
+                        console.error('❌ Firebase save failed:', error);
+                        errors.firebase = error.message;
                         // Mark for offline sync
                         localStorage.setItem('kanbanPendingSync', 'true');
                     }
+                } else {
+                    console.log('⚠️ Skipping Firebase save - offline or no database connection');
+                    errors.firebase = this.isOnline ? 'No database connection' : 'Offline mode';
                 }
 
-                this.updateBackupStatus(success);
+                // Enhanced status update with error details
+                this.updateBackupStatus(success, errors);
+                
+                // Log final status
+                if (success.firebase && success.localStorage) {
+                    console.log('✅ Save completed successfully (both Firebase and localStorage)');
+                } else if (success.firebase || success.localStorage) {
+                    console.warn('⚠️ Partial save completed:', success);
+                } else {
+                    console.error('❌ Save failed completely:', errors);
+                }
+                
                 return success;
             }
 
@@ -2000,7 +2040,7 @@
                 }, 3000);
             }
 
-            updateBackupStatus(success) {
+            updateBackupStatus(success, errors = {}) {
                 const statusEl = document.getElementById('backupStatus');
                 if (!statusEl) return;
 
@@ -2010,14 +2050,30 @@
                     statusEl.textContent = `☁️ Synced at ${now}`;
                     statusEl.style.color = 'rgba(76, 175, 80, 0.8)';
                 } else if (success.firebase) {
-                    statusEl.textContent = `☁️ Cloud saved at ${now}`;
+                    const localError = errors.localStorage ? ` (Local issue: ${errors.localStorage.substring(0, 30)}...)` : '';
+                    statusEl.textContent = `☁️ Cloud saved at ${now}${localError}`;
                     statusEl.style.color = 'rgba(76, 175, 80, 0.8)';
+                    statusEl.title = errors.localStorage ? `localStorage error: ${errors.localStorage}` : '';
                 } else if (success.localStorage) {
-                    statusEl.textContent = `💾 Local saved at ${now}`;
+                    const firebaseError = errors.firebase ? ` (Cloud issue: ${errors.firebase.substring(0, 30)}...)` : '';
+                    statusEl.textContent = `💾 Local saved at ${now}${firebaseError}`;
                     statusEl.style.color = 'rgba(255, 193, 7, 0.8)';
+                    statusEl.title = errors.firebase ? `Firebase error: ${errors.firebase}` : '';
                 } else {
-                    statusEl.textContent = `❌ Save failed at ${now}`;
+                    // Both failed - show more detailed error
+                    let errorMsg = `❌ Save failed at ${now}`;
+                    let details = [];
+                    if (errors.localStorage) details.push(`Local: ${errors.localStorage}`);
+                    if (errors.firebase) details.push(`Cloud: ${errors.firebase}`);
+                    
+                    statusEl.textContent = errorMsg;
                     statusEl.style.color = 'rgba(244, 67, 54, 0.8)';
+                    statusEl.title = details.length ? details.join(' | ') : 'Unknown error - check console for details';
+                    
+                    console.error('❌ Complete save failure details:', errors);
+                    
+                    // Show error notification
+                    this.showSyncNotification('❌ Save failed - check status for details');
                 }
 
                 setTimeout(() => {
@@ -2027,7 +2083,8 @@
                         statusEl.textContent = '💾 Offline mode...';
                     }
                     statusEl.style.color = 'rgba(255, 255, 255, 0.7)';
-                }, 3000);
+                    statusEl.title = '';
+                }, 5000); // Increased timeout so users can see error details
             }
 
             // Export data to JSON file - includes ALL workspaces
