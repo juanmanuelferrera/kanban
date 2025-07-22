@@ -1606,11 +1606,25 @@
                 return data;
             }
 
+            stopRealtimeListener() {
+                if (this.realtimeUnsubscribe) {
+                    console.log('🔇 Stopping real-time listener');
+                    this.realtimeUnsubscribe();
+                    this.realtimeUnsubscribe = null;
+                }
+            }
+
             setupRealtimeListener() {
                 if (!window.database) return;
+                
+                // Clean up existing listener first
+                this.stopRealtimeListener();
 
+                console.log(`🎧 Setting up real-time listener for workspace: ${this.workspaceId}`);
                 const workspaceRef = window.firebaseRef(window.database, `workspaces/${this.workspaceId}/data`);
-                window.firebaseOnValue(workspaceRef, (snapshot) => {
+                
+                // Store the unsubscribe function
+                this.realtimeUnsubscribe = window.firebaseOnValue(workspaceRef, (snapshot) => {
                     if (snapshot.exists()) {
                         const data = snapshot.val();
                         // Only update if the data is newer
@@ -4432,7 +4446,11 @@
                 currentWorkspace = newWorkspaceId;
                 
                 // Update storage to use workspace-specific data
+                console.log(`🔄 Updating storage to workspace: ${currentWorkspace}`);
                 storage.workspaceId = currentWorkspace;
+                
+                // Stop existing real-time listener and setup new one for new workspace
+                storage.stopRealtimeListener();
                 
                 // Create new storage manager for new workspace (if using legacy system)
                 if (storage instanceof StorageManager) {
@@ -4451,6 +4469,10 @@
                 // Load new workspace data
                 console.log('📥 Loading new workspace data...');
                 await loadData();
+                
+                // Setup real-time listener for new workspace
+                console.log('🎧 Setting up real-time listener for new workspace...');
+                storage.setupRealtimeListener();
                 
                 // Force UI refresh
                 console.log('🔄 Refreshing UI...');
