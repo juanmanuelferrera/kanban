@@ -4150,9 +4150,9 @@
             const currentProjectSpan = document.getElementById('currentProject');
             if (currentProjectSpan) currentProjectSpan.textContent = 'No project';
             
-            // Clear board title
+            // Clear board title (text will be set appropriately after loading)
             const boardTitle = document.getElementById('boardTitle');
-            if (boardTitle) boardTitle.value = 'Loading workspace...';
+            if (boardTitle) boardTitle.value = '';
             
             console.log('🧹 All tasks and UI elements cleared thoroughly');
         }
@@ -4190,9 +4190,6 @@
                 
                 // Clear all tasks from UI immediately
                 clearAllTasks();
-                
-                // Update board title to indicate loading
-                document.getElementById('boardTitle').value = 'Loading workspace...';
                 
                 // Load new workspace data
                 console.log('📥 Loading new workspace data...');
