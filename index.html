@@ -1642,6 +1642,7 @@
                         const workspaceRef = window.firebaseRef(window.database, `workspaces/${this.workspaceId}/data`);
                         await window.firebaseSet(workspaceRef, data);
                         success.firebase = true;
+                        this.lastSaveTime = Date.now(); // Track save time to prevent merge race conditions
                         console.log(`Data saved to Firebase workspace: ${this.workspaceId}`);
                     } catch (error) {
                         console.error('Firebase save failed:', error);
@@ -1810,6 +1811,13 @@
                 console.log('🔄 Merging remote changes with local data');
                 console.log('🔍 Current projects keys:', Object.keys(projects));
                 console.log('🔍 Remote data keys:', Object.keys(remoteData.projects || {}));
+                
+                // Skip merge if we just saved to prevent overwriting our own changes
+                const now = Date.now();
+                if (this.lastSaveTime && (now - this.lastSaveTime) < 2000) {
+                    console.log('⏸️ Skipping merge - just saved data, preventing race condition');
+                    return;
+                }
                 
                 const localProjects = { ...projects };
                 const remoteProjects = remoteData.projects || {};
