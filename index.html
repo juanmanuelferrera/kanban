@@ -1288,12 +1288,18 @@
 
     <div class="main-content">
         <div class="header">
-            <div class="header-top" style="display: flex; justify-content: center; align-items: center; margin-bottom: 10px;">
+            <div class="header-top" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                <div style="flex: 1;"></div>
                 <div class="workspace-selector">
                     <select id="workspaceSelect" class="workspace-dropdown" style="font-size: 16px; font-weight: 600; min-width: 200px; text-align: center; background: rgba(255,255,255,0.9); border: 1px solid #d1d5db;">
                         <option value="personal">📁 Main Workspace</option>
                     </select>
                     <button class="workspace-btn" onclick="showWorkspaceModal()">+</button>
+                </div>
+                <div style="flex: 1; display: flex; justify-content: flex-end;">
+                    <button onclick="showInfoModal()" style="background: rgba(255,255,255,0.9); border: 1px solid #d1d5db; border-radius: 8px; padding: 8px 12px; cursor: pointer; color: #374151; font-size: 16px; font-weight: 500; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.1);" onmouseover="this.style.background='rgba(59, 130, 246, 0.1)'; this.style.borderColor='#3b82f6'; this.style.color='#1e40af';" onmouseout="this.style.background='rgba(255,255,255,0.9)'; this.style.borderColor='#d1d5db'; this.style.color='#374151';">
+                        ℹ️ Info
+                    </button>
                 </div>
             </div>
             <div class="header-bottom" style="display: flex; justify-content: space-between; align-items: center;">
@@ -1364,6 +1370,48 @@
             </div>
             
             <button onclick="closeWorkspaceModal()" style="background: #6b7280; color: white; padding: 10px 20px; border: none; border-radius: 6px; cursor: pointer; float: right;">Close</button>
+        </div>
+    </div>
+
+    <!-- Information Modal -->
+    <div class="modal" id="infoModal" style="display: none;">
+        <div class="modal-content" style="max-width: 600px;">
+            <h2 style="margin-bottom: 20px; text-align: center;">🚀 Ultra Kanban Guide</h2>
+            
+            <div style="display: grid; gap: 15px;">
+                <div style="background: #f8fafc; padding: 15px; border-radius: 8px; border-left: 4px solid #3b82f6;">
+                    <h3 style="margin: 0 0 8px 0; color: #1e40af;">📋 Boards & Tasks</h3>
+                    <p style="margin: 0; font-size: 14px; line-height: 1.5;">Create boards for different projects. Add tasks and drag them between TO DO, DOING, and DONE columns to track progress.</p>
+                </div>
+                
+                <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; border-left: 4px solid #10b981;">
+                    <h3 style="margin: 0 0 8px 0; color: #047857;">🏢 Workspaces</h3>
+                    <p style="margin: 0; font-size: 14px; line-height: 1.5;">Create separate workspaces for different contexts (Work, Personal, Team projects). Each workspace has its own boards and data.</p>
+                </div>
+                
+                <div style="background: #fefce8; padding: 15px; border-radius: 8px; border-left: 4px solid #eab308;">
+                    <h3 style="margin: 0 0 8px 0; color: #a16207;">🔄 Real-time Sync</h3>
+                    <p style="margin: 0; font-size: 14px; line-height: 1.5;">Changes sync automatically across all your devices. Share your URL with team members for real-time collaboration.</p>
+                </div>
+                
+                <div style="background: #f3e8ff; padding: 15px; border-radius: 8px; border-left: 4px solid #9333ea;">
+                    <h3 style="margin: 0 0 8px 0; color: #7c3aed;">💾 Data Controls</h3>
+                    <ul style="margin: 8px 0 0 0; padding-left: 18px; font-size: 14px; line-height: 1.4;">
+                        <li><strong>📥 Export:</strong> Download backup as JSON file</li>
+                        <li><strong>📤 Import:</strong> Restore from backup file</li>
+                        <li><strong>📝 Tasks:</strong> Import tasks from text/markdown files</li>
+                        <li><strong>🗑️ Trash:</strong> View and restore deleted boards</li>
+                        <li><strong>💾 Backup:</strong> Create automatic backup</li>
+                    </ul>
+                </div>
+                
+                <div style="background: #fef2f2; padding: 15px; border-radius: 8px; border-left: 4px solid #ef4444;">
+                    <h3 style="margin: 0 0 8px 0; color: #dc2626;">🔐 Security</h3>
+                    <p style="margin: 0; font-size: 14px; line-height: 1.5;">Your data is protected with email authentication or simple password mode. All data is encrypted and stored securely.</p>
+                </div>
+            </div>
+            
+            <button onclick="closeInfoModal()" style="background: #6b7280; color: white; padding: 12px 24px; border: none; border-radius: 6px; cursor: pointer; float: right; margin-top: 20px;">Got it!</button>
         </div>
     </div>
 
@@ -4219,6 +4267,14 @@
         function closeWorkspaceModal() {
             document.getElementById('workspaceModal').style.display = 'none';
             document.getElementById('newWorkspaceName').value = '';
+        }
+
+        function showInfoModal() {
+            document.getElementById('infoModal').style.display = 'flex';
+        }
+        
+        function closeInfoModal() {
+            document.getElementById('infoModal').style.display = 'none';
         }
 
         // Function to dynamically assign emoji based on workspace name
