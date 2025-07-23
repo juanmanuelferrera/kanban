@@ -5045,22 +5045,27 @@
         function makeURLsClickable(text) {
             if (!text) return text;
             
-            // Simple and robust approach - just handle the most common cases
+            // Check if text already contains HTML links to avoid double processing
+            if (text.includes('<a href=')) {
+                return text;
+            }
+            
             let result = text;
             
-            // Handle full URLs with protocol (http/https)
-            result = result.replace(/(https?:\/\/[^\s]+)/gi, (url) => {
+            // Handle full URLs with protocol (http/https) - more precise regex
+            result = result.replace(/\b(https?:\/\/[^\s<>"]+)/gi, (url) => {
+                // Clean up trailing punctuation
                 const cleanUrl = url.replace(/[.,:;!?)}\]]+$/, '');
                 return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${cleanUrl}</a>`;
             });
             
-            // Handle www URLs (simple approach)
-            result = result.replace(/\b(www\.[^\s]+)/gi, (url) => {
-                const cleanUrl = url.replace(/[.,:;!?)}\]]+$/, '');
-                // Don't double-link if already part of an href
-                if (result.indexOf(`href="https://${cleanUrl}"`) !== -1) {
+            // Handle www URLs only if not already processed
+            result = result.replace(/\b(www\.[^\s<>"]+)/gi, (url) => {
+                // Skip if already part of a link
+                if (result.includes(`>${url}<`) || result.includes(`href="`) && result.includes(url)) {
                     return url;
                 }
+                const cleanUrl = url.replace(/[.,:;!?)}\]]+$/, '');
                 return `<a href="https://${cleanUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${cleanUrl}</a>`;
             });
             
