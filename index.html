@@ -4763,9 +4763,12 @@
         let isReordering = false;
 
         function handleTaskDragStart(e) {
+            console.log('🎯 handleTaskDragStart called', e.target);
             draggedTask = e.target;
             const taskId = parseInt(e.target.getAttribute('data-task-id'));
             const column = e.target.getAttribute('data-column');
+
+            console.log('📊 Task drag info:', { taskId, column, target: e.target });
 
             draggedTaskData = {
                 taskId: taskId,
@@ -5056,7 +5059,7 @@
             result = result.replace(/\b(https?:\/\/[^\s<>"]+)/gi, (url) => {
                 // Clean up trailing punctuation
                 const cleanUrl = url.replace(/[.,:;!?)}\]]+$/, '');
-                return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${cleanUrl}</a>`;
+                return `<a href="${cleanUrl}" target="_blank" rel="noopener noreferrer" draggable="false" onclick="event.stopPropagation()">${cleanUrl}</a>`;
             });
             
             // Handle www URLs only if not already processed
@@ -5066,7 +5069,7 @@
                     return url;
                 }
                 const cleanUrl = url.replace(/[.,:;!?)}\]]+$/, '');
-                return `<a href="https://${cleanUrl}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()">${cleanUrl}</a>`;
+                return `<a href="https://${cleanUrl}" target="_blank" rel="noopener noreferrer" draggable="false" onclick="event.stopPropagation()">${cleanUrl}</a>`;
             });
             
             return result;
